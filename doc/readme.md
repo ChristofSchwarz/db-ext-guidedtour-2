@@ -4,7 +4,7 @@
 
 The extension can be used on Qlik Cloud editions as well. For the users it will work with *no further* configuration. If you want *to edit* the tour 
 (=develop the tour content on qlikcloud.com) you need to 
- * either use the databridge cloud location qs-i-dev.databridge.ch
+ * either use the databridge cloud location from the dropdown Tour Editor Location (that is https://qs-i-dev.databridge.ch)
  * or deploy the editor folder from this repo on a web server of your choice and specify the url under "other"
 ```
 Note: there is no data being sent to that web host origin, just the html, css and js files are being loaded
