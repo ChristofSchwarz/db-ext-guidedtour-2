@@ -7,7 +7,7 @@ The extension can be used on Qlik Cloud editions as well. For the users it will 
  * either use the databridge host qs-i-dev.databridge.ch
  * or deploy the editor folder from this repo on a web server of your choice and specify the url under "other"
 
- ![screenshot](./pic/editor1.png "screenshot")
+<img src="./pic/editor1.png" style="height:500px">
  
  * set a CSP (Content Source Policy) in the cloud management console to whitelist the origin of the editor
  
