@@ -5,7 +5,10 @@
 The extension can be used on Qlik Cloud editions as well. For the users it will work with *no further* configuration. If you want *to edit* the tour 
 (=develop the tour content on qlikcloud.com) you need to 
  * either use the databridge host qs-i-dev.databridge.ch
- * or deploy the editor folder from this repo on a web server of your choice
+ * or deploy the editor folder from this repo on a web server of your choice and specify the url under "other"
+
+ ![screenshot](./pic/editor1.png "screenshot")
+ 
  * set a CSP (Content Source Policy) in the cloud management console to whitelist the origin of the editor
  
 The reason for this is, that the editor has quite some source code and dependencies, therefore it is kept within an iframe. Unlike Qlik Sense Windows 
