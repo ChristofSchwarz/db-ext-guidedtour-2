@@ -19,5 +19,5 @@ The reason for this is, that the editor has quite some source code and dependenc
 Unlike Qlik Sense Windows Servers, Qlik Cloud doesn't act as a web-server for website content. The iframe content needs to be sourced from another origin. 
 
 
-You can prove this in the browser's Network Monitor, that traffic is going to the editor's 
+You can prove this in the browser's Network Monitor, that no communication other than the GET for the editors resources is going out. 
 
