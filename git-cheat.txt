@@ -1,4 +1,3 @@
-# https://www.youtube.com/watch?v=xwlQimbwJJE
 
 # First time
 git clone https://github.com/ChristofSchwarz/db_ext_master-vis-changer
@@ -7,4 +6,6 @@ git remote add origin git@github.com:ChristofSchwarz/db_ext_master-vis-changer.g
 git push
 
 # Every time
-git add . &  git commit -m "updates" & git push -u origin main
+git add . 
+git commit -m "updates"  
+git push -u origin main
