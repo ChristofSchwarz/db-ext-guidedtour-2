@@ -1,0 +1,16 @@
+{
+    "name": "/\\Guided Tour 2",
+    "type": "visualization",
+    "description": "Extension to show tooltips tours over Qlik Sense objects",
+    "author": "Christof Schwarz",
+    "homepage": "www.databridge.ch",
+    "version": "1.9.0",
+    "changehistory": {},
+    "icon": "play",
+    "preview": "pics/databridgelogo.png",
+    "dependencies": {
+        "qlik-sense": ">=3.0.x"
+    },
+    "keywords": "qlik-sense, visualization",
+    "license": "MIT"
+}

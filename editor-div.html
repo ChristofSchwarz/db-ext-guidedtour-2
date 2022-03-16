@@ -1,0 +1,43 @@
+<div class="pp-section ">
+  <h4
+    class="pp-section-header  ui-accordion-header ui-corner-top ui-state-default ui-accordion-icons ui-accordion-header-active ui-state-active"
+    role="tab" id="ui-id-15" aria-controls="ui-id-16" aria-selected="true" aria-expanded="true" tabindex="0">
+    <span class="ui-accordion-header-icon ui-icon ui-icon-triangle-1-s"></span>
+    Guided Tour Editor
+
+    <!-- from right to left -->
+    <button class="gtour-close-editor  lui-button" style="float:right;margin:4px;" title="Save and Close">
+      <span class="lui-icon  lui-icon--tick"></span>
+    </button>
+
+    <!-- <button class="gtour-close-no-save  lui-button" style="float:right;margin:4px;" title="Discard Changes">
+      <span class="lui-icon  lui-icon--close"></span>
+    </button> -->
+
+    <!-- <button class="lui-button" style="float:right;margin:4px;" title="Tell to iframe" onclick="document.getElementById('gtour-editor-iframe').contentWindow.postMessage({tourJson:'haha',log:true,storageProvider:1,app:'d3965977-58f6-40cf-972f-7669287b3b87',tour:'Test'}, 
+      'https://qs-i-dev.databridge.ch/');">
+      <span class="lui-icon  lui-icon--download"></span>
+    </button> -->
+
+    <!-- <button class="gtour-start-picker  lui-button" style="float:right;margin:4px; display:none;" title="Select object">
+      !-- hidden button, click will be triggerd from editor iframe --
+      <span class="lui-icon  lui-icon--effects"></span>
+    </button> -->
+
+    <button class="gtour-preview-tooltip  lui-button" style="float:right;margin:4px;" title="Preview">
+      <span class="lui-icon  lui-icon--view"></span>
+    </button>
+    <!-- <button class="gtour-save-edits  lui-button">Save</button> -->
+  </h4>
+  <div
+    class="pp-section-content  ui-accordion-content ui-corner-bottom ui-helper-reset ui-widget-content ui-accordion-content-active"
+    role="tabpanel" aria-hidden="false" style="overflow: auto; background-color: #fbfbfb;">
+    <div id="gtour-editor-loader">
+      <!-- rotating loader -->
+      <span class="lui-icon  lui-icon--sync  gtour-rotate" style="font-size:40px;color:grey;"></span>
+    </div>
+    <!-- <div class="pp-component pp-expandable-items-component"> -->
+    <iframe id="gtour-editor-iframe" style="width:100%;border:0px;"></iframe>
+    <!-- </div> -->
+  </div>
+</div>

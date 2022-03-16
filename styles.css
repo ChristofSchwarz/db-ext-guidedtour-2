@@ -1,0 +1,81 @@
+/* CSS */
+
+.gtour-rotate {
+  animation-name: rotate;
+  animation-duration: 1.5s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  transform: rotate(1turn);
+  -webkit-animation-name: rotate;
+  -webkit-animation-duration: 1.5s;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-timing-function: linear;
+  -webkit-transform: rotate(1turn);
+}
+
+.gtour-toolip-parent {
+  font-family: Source Sans Pro, sans-serif;
+}
+
+.gtour-err {
+  background-color: red;
+  color: white;
+  text-align: center;
+  padding: 2px;
+  margin-top: 3px;
+}
+
+.gtour-next {
+  float: right;
+  height: auto;
+  border-width: 1px;
+  margin-top: 10px;
+  margin-bottom: 1px;
+  margin-right: 1px;
+}
+.gtour-next:hover {
+  border-width: 2px;
+  margin-top: 9px;
+  margin-bottom: 0;
+  margin-right: 0;
+}
+
+.gtour-editor {
+  background-color: #fbfbfb;
+  /* background-image: url("../extensions/ext_guided_tour_2/pics/loading.gif");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 100px 100px; */
+}
+
+.lui-tooltip li {
+  margin-left: 20px;
+}
+
+#gtour-editor-loader {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  top: 45%;
+}
+
+.gtour-rotate {
+  animation-name: rotate;
+  animation-duration: 1.5s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  transform: rotate(1turn);
+  -webkit-animation-name: rotate;
+  -webkit-animation-duration: 1.5s;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-timing-function: linear;
+  -webkit-transform: rotate(1turn);
+}
+
+.gtour-center-middle {
+  top: 50%;
+  transform: translate(0, -50%);
+  position: absolute;
+  text-align: center;
+  width: 100%;
+}
