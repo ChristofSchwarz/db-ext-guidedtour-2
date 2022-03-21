@@ -12,7 +12,7 @@ define(["jquery", "../editor/scripts/leonardo-msg"], function
 
     const tourDefault = {
         "mode": "click",
-        "fontsize": "12px",
+        "fontsize": "medium",
         "arrowHead": 12,
         "opacity": 0.2,
         "width": "250",
@@ -345,7 +345,10 @@ define(["jquery", "../editor/scripts/leonardo-msg"], function
             if (body) args.data = body;
             if (log) console.log('$.ajax request', args);
             result = await $.ajax(args);
-            if (log) console.log('$.ajax response', result.substr(0, 1024) & (result.length > 1024 ? '...' : ''));
+            if (log) {
+                const logLine = JSON.stringify(result);
+                console.log('$.ajax response', logLine.substr(0, 1024) + (logLine.length > 1024 ? '...' : ''));
+            }
             return result;
 
         } catch (error) {

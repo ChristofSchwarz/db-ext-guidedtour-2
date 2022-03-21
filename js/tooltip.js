@@ -380,10 +380,11 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                                 <span class="lui-icon  lui-icon--close" style="float:right;cursor:pointer;${tourJson.mode == 'hover' ? 'opacity:0;' : ''}" id="${ownId}_quit"></span>
                                 ${knownObjId == 0 ? '<br/><div class="gtour-err">Object <strong>' + qObjId + '</strong> not found!</div>' : '<br/>'}
                                 ${knownObjId > 1 ? '<br/><div class="gtour-err"><strong>' + qObjId + '</strong> selects ' + knownObjId + ' objects!</div>' : '<br/>'}
-                                <div style="margin-top:10px;" id="${ownId}_text">
+                                <div id="${ownId}_text" class="gtour-text" style="font-size:${tourJson.fontsize}">
                                     ${vizId ? '<!--placeholder for chart-->' : html}
                                 </div>
-                                <a class="lui-button  gtour-next" style="${tourJson.mode == 'hover' ? 'opacity:0;' : ''}border-color:${tourJson.bordercolor};" 
+                                <a class="lui-button  gtour-next" 
+                                  style="${tourJson.mode == 'hover' ? 'opacity:0;' : ''}border-color:${tourJson.bordercolor};${tooltipJson.hideNextButton ? 'display:none;' : ''}" 
                                   id="${ownId}_next">${isLast ? tourJson.btnLabelDone : tourJson.btnLabelNext}</a>
                                 <div class="lui-tooltip__arrow"></div>
                             </div>`);
@@ -572,10 +573,6 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
 
     async function resolveDollarBrackets(v, enigma) {
 
-        // function evaluate(inp) {
-        //     return '***';
-        // }
-
         var needle = 0;
         //var parts = [];
         while (v.indexOf('$(', needle) > -1) {
@@ -597,8 +594,11 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                 //console.log('brackets close at ', end, v.substr(start, end - start - 1));
                 needle += v.length;
                 v = v.substr(0, start - 2)
-                    + await enigma.evaluate(v.substr(start, end - start - 1))
-                    + v.substr(end);
+                    + await enigma.evaluate(
+                        v.substr(start, end - start - 1)
+                            .replace(/&lt;/g, '<')
+                            .replace(/&gt;/g, '>')
+                    ) + v.substr(end);
                 needle -= v.length;
             }
             needle++;

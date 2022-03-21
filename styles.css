@@ -25,17 +25,23 @@
   margin-top: 3px;
 }
 
+.gtour-text {
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
 .gtour-next {
   float: right;
   height: auto;
   border-width: 1px;
-  margin-top: 10px;
+  margin-top: 5px;
   margin-bottom: 1px;
   margin-right: 1px;
 }
+
 .gtour-next:hover {
   border-width: 2px;
-  margin-top: 9px;
+  margin-top: 4px;
   margin-bottom: 0;
   margin-right: 0;
 }

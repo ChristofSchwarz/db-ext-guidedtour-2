@@ -1,8 +1,2 @@
-db_ext_guided_tour.qext;
-db_ext_guided_tour.js;
-props.js;
-tooltip.js;
-license.js;
-picker.js;
-styles.css;
-test.html
+ext_guided_tour_2.qext;
+ext_guided_tour_2.js
