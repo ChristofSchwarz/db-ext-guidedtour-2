@@ -543,7 +543,10 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
         // element itself when it is.
 
         //console.warn('waitForElement x times:', tries);f
-        const element = document.querySelector(selector);
+
+        const element = selector.substr(0, 1) == '#' ?
+            document.querySelector(`[id="${selector.substr(1)}"]`)  // .querySelector fails with special chars in id, for example on #9e2531ea-9b89-4da6-bdd4-ddb4fa473c6d6
+            : document.querySelector(selector);
 
 
         if (!window[`__${selector}`]) {
@@ -592,14 +595,13 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                 console.error('bracket level starting at ' + start + ' does not close');
             } else {
                 //console.log('brackets close at ', end, v.substr(start, end - start - 1));
-                needle += v.length;
-                v = v.substr(0, start - 2)
-                    + await enigma.evaluate(
-                        v.substr(start, end - start - 1)
-                            .replace(/&lt;/g, '<')
-                            .replace(/&gt;/g, '>')
-                    ) + v.substr(end);
-                needle -= v.length;
+                const replacement = await enigma.evaluate(
+                    v.substr(start, end - start - 1)
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                );
+                v = v.substr(0, start - 2) + replacement + v.substr(end);
+                needle = start + replacement.length - 3;
             }
             needle++;
         }
