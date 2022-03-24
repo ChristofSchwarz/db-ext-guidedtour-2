@@ -10,6 +10,8 @@ History:
 define(["qlik", "jquery", "./license", "./tooltip"], function
     (qlik, $, license, tooltip) {
 
+    const lStorageDefault = '{"openedAt":"18991231000000", "objectsOpened": {}}';
+
     function noLicenseMsg(mode) {
         return `The ${mode} mode would start now, if you had a license for the guided-tour extension.
             <br/><br/>Get in touch with <a href="mailto:insight-sales@databridge.ch">insight-sales@databridge.ch</a> '
@@ -57,11 +59,11 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
             const app = qlik.currApp(this);
             const enigma = app.model.enigmaModel;
             const currSheet = qlik.navigation.getCurrentSheetId().sheetId;
-            const mode = qlik.navigation.getMode();
+            const analysisMode = qlik.navigation.getMode() == 'analysis';
             const parentSelector = `[${gtourGlobal.isSingleMode ? 'data-qid' : 'tid'}="${ownId}"] .qv-object-content .ng-scope`;
 
             if (layout.pConsoleLog) console.log(ownId, 'paint.paint', layout, tourJson);
-            if (mode != 'edit') $('.gtour-picker').remove();
+            if (analysisMode) $('.gtour-picker').remove();
             const lStorageKey = app.id + '|' + ownId;
 
             // add sheet to activeTooltip object
@@ -169,7 +171,7 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                 //---------------------------------------------------
                 // Auto-lauch always ... plays entire tour automatically once per session
 
-                if (mode == 'analysis' && !gtourGlobal.visitedTours[ownId] && !getActiveTour(ownId, currSheet, layout)) {
+                if (analysisMode && !gtourGlobal.visitedTours[ownId] && !getActiveTour(ownId, currSheet, layout)) {
                     gtourGlobal.visitedTours[ownId] = true;  // remember for this session, that the tour has been started once
                     tooltip.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
                 }
@@ -182,16 +184,21 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                     }
                 })
                 //---------------------------------------------------
-            } /* else if (tourJson.mode == 'auto-once') {
+            } else if (tourJson.mode == 'auto-once') {
                 //---------------------------------------------------
                 // Auto-lauch once ... plays entire tour automatically and remember per user
                 // find out if it is the time to auto-start the tour
-                if (mode == 'analysis' && !getActiveTour(ownId, currSheet, layout)) {
+                if (analysisMode && !getActiveTour(ownId, currSheet, layout)) {
                     enigma.evaluate("=TimeStamp(Now(),'YYYYMMDDhhmmss')").then(function (serverTime) {
                         var lStorageValue = JSON.parse(window.localStorage.getItem(lStorageKey) || lStorageDefault);
-                        if (serverTime >= layout.pRelaunchAfter
-                            && layout.pRelaunchAfter > lStorageValue.openedAt) {
-                            if (licensed) {
+                        if (serverTime >= layout.pRelaunchAfter && layout.pRelaunchAfter > lStorageValue.openedAt) {
+                            if (gtourGlobal.licensedObjs[ownId] || gtourGlobal.isOEMed != 0) {
+                                tooltip.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
+                                lStorageValue.openedAt = serverTime + ''; // save as string
+                                window.localStorage.setItem(lStorageKey, JSON.stringify(lStorageValue));
+                                if (layout.pConsoleLog) console.log(ownId, 'Stored locally: ', JSON.stringify(lStorageValue));
+                                gtourGlobal.visitedTours[ownId] = true;
+                                /*
                                 tooltip.cacheHypercube(ownId, enigma, objFieldName, layout.pTourField, layout.pTourSelectVal)
                                     .then(function (hcube) {
                                         gtourGlobal.tooltipsCache[ownId] = hcube;
@@ -200,9 +207,10 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                                         window.localStorage.setItem(lStorageKey, JSON.stringify(lStorageValue));
                                         if (layout.pConsoleLog) console.log(ownId, 'Stored locally: ', JSON.stringify(lStorageValue));
                                     });
+                                */
 
                             } else {
-                                if (layout.pConsoleLog) console.log(ownId, 'auto-once suppressed because no license');
+                                if (layout.pConsoleLog) console.log(ownId, 'auto-once would start now but it has no license.');
                                 if (!gtourGlobal.noLicenseWarning[ownId]) {
                                     leonardo.msg(ownId, 'Guided-Tour Extension', noLicenseMsg('Auto-launch Once'), null, 'OK');
                                 }
@@ -214,11 +222,20 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                         }
                     })
                 } else {
-                    if (layout.pConsoleLog) console.log(ownId, 'auto-once suppressed because ' + (mode != 'analysis' ? (mode + '-mode') : 'other tour active'));
+                    if (layout.pConsoleLog) console.log(ownId, 'auto-once suppressed because ' + (analysisMode ? 'analysis-mode' : 'other tour active'));
                 }
                 // on click, tour will be restarted.
                 $(`#${ownId}_start`).click(function () {
                     if (!getActiveTour(ownId, currSheet, layout)) {
+                        tooltip.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
+                        enigma.evaluate("=TimeStamp(Now(),'YYYYMMDDhhmmss')").then(function (serverTime) {
+                            const lStorageValue = JSON.parse(window.localStorage.getItem(lStorageKey) || lStorageDefault);
+                            lStorageValue.openedAt = serverTime + ''; // save as string
+                            window.localStorage.setItem(lStorageKey, JSON.stringify(lStorageValue));
+                            if (layout.pConsoleLog) console.log(ownId, 'Stored locally: ', JSON.stringify(lStorageValue));
+                        })
+                        gtourGlobal.visitedTours[ownId] = true;
+                        /*
                         tooltip.cacheHypercube(ownId, enigma, objFieldName, layout.pTourField, layout.pTourSelectVal)
                             .then(function (hcube) {
                                 gtourGlobal.tooltipsCache[ownId] = hcube;
@@ -232,10 +249,11 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                                 //gtourGlobal.visitedTours[ownId] = true;
                             })
                             .catch(function () { });
+                        */
                     }
                 })
                 //---------------------------------------------------
-            } else if (tourJson.mode == 'hover') {
+            } /* else if (tourJson.mode == 'hover') {
                 //---------------------------------------------------
                 
                 $(`#${ownId}_hovermode`).click(function () {
@@ -283,7 +301,7 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
              else if (tourJson.mode == 'auto-once-p-obj') {
                 //---------------------------------------------------
                 // find out if auto-start of a tooltip is needed
-                if (mode == 'analysis' && !getActiveTour(ownId, currSheet, layout)) {
+                if (analysisMode && !getActiveTour(ownId, currSheet, layout)) {
                     if (licensed) {
                         const lStorageValue = JSON.parse(window.localStorage.getItem(lStorageKey) || lStorageDefault);
                         // function (ownId, enigma, backendApi, objFieldName, tourFieldName, tourFieldVal, timestampFieldName, lStorageVal)

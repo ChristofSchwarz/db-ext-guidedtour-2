@@ -31,7 +31,7 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
             for (var tooltip of resolvedTourJson.tooltips) {
                 if (tooltip.html.indexOf('$(') > -1) {
                     const newHtml = await resolveDollarBrackets(tooltip.html, enigma);
-                    console.warn(newHtml);
+                    //console.warn(newHtml);
                     tooltip.html = newHtml;
                 }
 
@@ -464,7 +464,7 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
 
                     }
 
-                    if (knownObjId) {
+                    if (knownObjId) {   // hmm, knownObjId is undefined at this point. test scrollintoview
                         if (!isScrolledIntoView(selector)) {
                             document.querySelector(selector).scrollIntoView({ behavior: "smooth" }); // scroll to the element
                             var interval;

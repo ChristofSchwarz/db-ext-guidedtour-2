@@ -122,13 +122,16 @@ define(["jquery", "../editor/scripts/leonardo-msg"], function
                 if (status == 409) {
                     await qlikCloudApiCall('DELETE', apiUrls["2"], log);
                     status = await qlikCloudApiCall('PUT', apiUrls["2"], log, blob);
+                    if (status != 200) {
+                        console.error('PUT file resulted in error, status ' + status);
+                        alert("PUT (save) didn't work! Making backup under 'backup'");
+                        await qlikCloudApiCall('PUT', apiUrls["2"], log, blob);
+                        return false
+                    } else {
+                        return true
+                    }
                 }
-                if (status != 200) {
-                    console.error('PUT file resulted in error, status ' + status);
-                    return false
-                } else {
-                    return true
-                }
+
 
             } else if (providerId == 3 && mode == 'windows') {
 
@@ -297,12 +300,12 @@ define(["jquery", "../editor/scripts/leonardo-msg"], function
 
                 } else {
 
-                    leonardo.msg('listTours', 'Error', 'Function deleteTour: unknown providerId ' + providerId, null, 'OK');
+                    leonardo.msg('deleteTour', 'Error', 'Function deleteTour: unknown providerId ' + providerId, null, 'OK');
                     return false;
                 }
             }
             catch (err) {
-                leonardo.msg('listTours', 'Error', 'Function deleteTour: Error ' + JSON.stringify(err), null, 'OK');
+                leonardo.msg('deleteTour', 'Error', 'Function deleteTour: Error ' + JSON.stringify(err), null, 'OK');
                 return false;
             }
         }

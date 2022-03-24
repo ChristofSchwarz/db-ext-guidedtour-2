@@ -20,7 +20,6 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
             ["/api/v1/apps/", "/media/files/"]
             : ['../appcontent/', '/']
     }
-    const lStorageDefault = '{"openedAt":"18991231000000", "objectsOpened": {}}';
 
     $("<style>").html(cssContent).appendTo("head");
     // $("<style>").html(cssSnow).appendTo("head");  // theme for Quill editor
