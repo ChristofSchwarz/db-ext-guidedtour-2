@@ -118,20 +118,26 @@ define(["jquery", "../editor/scripts/leonardo-msg"], function
                     [smallestGIF + JSON.stringify(tourJson)],
                     { type: 'image/gif' }
                 );
-                var status = await qlikCloudApiCall('PUT', apiUrls["2"], log, blob);
-                if (status == 409) {
+                //var status = await qlikCloudApiCall('PUT', apiUrls["2"], log, blob);
+                var retry = 0;
+                var status;
+                do {
                     await qlikCloudApiCall('DELETE', apiUrls["2"], log);
                     status = await qlikCloudApiCall('PUT', apiUrls["2"], log, blob);
-                    if (status != 200) {
-                        console.error('PUT file resulted in error, status ' + status);
-                        alert("PUT (save) didn't work! Making backup under 'backup'");
-                        await qlikCloudApiCall('PUT', apiUrls["2"], log, blob);
-                        return false
-                    } else {
-                        return true
-                    }
-                }
+                    if (retry > 0) await delay(250);  // wait 250 millisecs
+                    retry++;
+                } while (status != 200 && retry < 10)
 
+                if (status != 200) {
+                    console.error('PUT file resulted in error, status ' + status);
+                    const timeNow = 'backup ' + (new Date().getTime());
+                    alert(`PUT (save) didn't work! Making backup under '${timeNow}'`);
+                    await qlikCloudApiCall('PUT', apiUrls["2"].replace(tourName, timeNow), log, blob);
+                    return false
+                } else {
+                    console.log('saveTour PUT worked after ' + retry + ' retries');
+                    return true
+                }
 
             } else if (providerId == 3 && mode == 'windows') {
 
@@ -383,5 +389,12 @@ define(["jquery", "../editor/scripts/leonardo-msg"], function
             xhr.send(blob);
         });
     }
+
+    function delay(millis) {
+        // usage: await delay(20); to wait 20 millisecs
+        return new Promise(function (resolve, reject) {
+            setTimeout(function () { resolve() }, millis)
+        })
+    };
 
 })
