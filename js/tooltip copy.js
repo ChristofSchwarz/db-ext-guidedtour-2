@@ -291,13 +291,13 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                         selectorFormat = 'qlik-object';
                         selector = gtourGlobal.isSingleMode ? `[data-qid="${qObjId}"]` : `[tid="${qObjId}"]`;
                         fadeSelector = selector;
-                        knownObjId = $(selector).length;
+                        // knownObjId = $(selector).length;
 
                     } else if (qObjId.indexOf('[data-itemid=') > -1) {
                         selectorFormat = 'qlik-container';
                         selector = qObjId;
                         fadeSelector = '[tid="' + $(selector).closest('.cell').attr('tid') + '"]';  // find the parent with class "cell"
-                        knownObjId = $(selector).length;
+                        // knownObjId = $(selector).length;
                         $(selector).trigger('click'); // click on the tab in the container
 
                     } else {
@@ -306,7 +306,7 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                         selectorFormat = 'css';
                         selector = qObjId;
                         fadeSelector = null;
-                        knownObjId = $(selector).length;
+                        // knownObjId = $(selector).length;
                     }
 
 

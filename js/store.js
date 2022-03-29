@@ -21,7 +21,8 @@ define(["jquery", "../editor/scripts/leonardo-msg"], function
         "bordercolor": "gray",
         "btnLabelNext": "Next",
         "btnLabelDone": "Done",
-        "tooltips": []
+        "tooltips": [],
+        "relaunchAfter": "19000101000000"
     };
 
     // 43 Bytes of a valid 1x1 px GIF http://probablyprogramming.com/2009/03/15/the-tiniest-gif-ever

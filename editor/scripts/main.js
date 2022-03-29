@@ -4,7 +4,7 @@ define([
 ], function
     ($, ui, Quill, leonardo, tourPropsHTML, tooltipPropsHTML) {
 
-    const autoSave = true;
+    const autoSave = true;  // tour calls save method on change of every <input> and <select> element
     const origin = '*';
 
     var log = document.location.search.split('log=')[1];
@@ -47,7 +47,9 @@ define([
 
             $('.gtour-tabs #1').click(function () {
                 // try to close preview of tooltip
-                $('.gtour-toolip-parent .lui-icon--close', window.parent.document).trigger('click');
+
+                window.top.postMessage({ msg: 'closePreview' }, origin);
+
             })
 
             $("#addTab").click(function () {
@@ -254,7 +256,16 @@ define([
         $('.gtour-tabs #' + newid).on('click', function () {
             //console.log('try to preview ' + newid);
             if ($('#tab-2 [key="selector"]').val()) {
-                $('.gtour-preview-tooltip', window.parent.document).trigger('click');
+                //$('.gtour-preview-tooltip', window.parent.document).trigger('click');
+                const activeTab = $('.ui-tabs-active').attr('id');
+                const selector = $('#tab-' + activeTab + '-accordion [key="selector"]').val();
+                window.top.postMessage({
+                    msg: 'previewTooltip',
+                    tourJson: DOMtoTourJson(),
+                    activeTab: activeTab,
+                    selector: selector
+                }, origin);
+
             }
             $('.a-color-picker').addClass('hidden'); // hide all other color pickers;
 
@@ -328,7 +339,7 @@ define([
                     }
                 }
             } else {
-                //console.log('Tour key/val', tourKey, tourJson[tourKey]);
+                console.log('Tour key/val', tourKey, tourJson[tourKey]);
                 // set respective input field to value
                 $('#tab-1 [key="' + tourKey + '"]').val(tourJson[tourKey]);
             }

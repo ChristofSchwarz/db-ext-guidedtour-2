@@ -191,7 +191,8 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                 if (analysisMode && !getActiveTour(ownId, currSheet, layout)) {
                     enigma.evaluate("=TimeStamp(Now(),'YYYYMMDDhhmmss')").then(function (serverTime) {
                         var lStorageValue = JSON.parse(window.localStorage.getItem(lStorageKey) || lStorageDefault);
-                        if (serverTime >= layout.pRelaunchAfter && layout.pRelaunchAfter > lStorageValue.openedAt) {
+                        if (serverTime >= gtourGlobal.cache[ownId].relaunchAfter
+                            && gtourGlobal.cache[ownId].relaunchAfter > lStorageValue.openedAt) {
                             if (gtourGlobal.licensedObjs[ownId] || gtourGlobal.isOEMed != 0) {
                                 tooltip.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
                                 lStorageValue.openedAt = serverTime + ''; // save as string
@@ -218,7 +219,7 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                             }
                             //gtourGlobal.visitedTours[ownId] = true;
                         } else {
-                            if (layout.pConsoleLog) console.log(ownId, 'user already launched this tour.');
+                            if (layout.pConsoleLog) console.log(ownId, 'user already launched this tour ' + lStorageValue.openedAt + '. Servertime: ' + serverTime);
                         }
                     })
                 } else {

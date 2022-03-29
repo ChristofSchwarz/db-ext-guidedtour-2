@@ -83,6 +83,10 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint", "text!../editor-div
 
                         await store.saveTour(gtourGlobal, arg.pTourName, arg.pStorageProvider, event.data.tourJson, app.id);
 
+                    } else if (event.data.msg == 'closePreview') {
+
+                        $('#' + ownId + '_tooltip').remove(); // if another tooltip is open, close it
+
                     } else if (event.data.msg == 'previewTooltip') {
 
 

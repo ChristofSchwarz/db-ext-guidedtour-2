@@ -37,9 +37,13 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
         initialProperties: {
             showTitles: false,
             disableNavMenu: true,
-            /* qHyperCubeDef: {
-                 qDimensions: []
-             }*/
+            qHyperCubeDef: {
+                qMeasures: [{
+                    qDef: {
+                        qDef: '=GetCurrentSelections()'
+                    }
+                }]
+            }
         },
 
         definition: {
@@ -47,6 +51,10 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
             component: "accordion",
             items: [
                 {
+                    uses: "measures",
+                    min: 1,
+                    max: 1
+                }, {
                     uses: "settings"
                 }, {
                     label: 'Extension Settings',
