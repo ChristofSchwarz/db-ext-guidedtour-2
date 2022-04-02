@@ -53,11 +53,11 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
                 {
                     uses: "measures",
                     min: 1,
-                    max: 1
+                    max: 6
                 }, {
                     uses: "settings"
                 }, {
-                    label: 'Extension Settings',
+                    label: '/\\ Guided Tour Editor & Settings',
                     type: 'items',
                     items: props.presentation(gtourGlobal)
                 }, {

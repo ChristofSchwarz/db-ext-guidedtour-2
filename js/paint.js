@@ -50,6 +50,12 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
         }
     }
 
+    function log(layout, text) {
+        if (layout.pConsoleLog) {
+            console.log(layout.qInfo.qId, text);
+        }
+    }
+
 
     return {
 
@@ -171,9 +177,24 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                 //---------------------------------------------------
                 // Auto-lauch always ... plays entire tour automatically once per session
 
-                if (analysisMode && !gtourGlobal.visitedTours[ownId] && !getActiveTour(ownId, currSheet, layout)) {
-                    gtourGlobal.visitedTours[ownId] = true;  // remember for this session, that the tour has been started once
-                    tooltip.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
+                if (!analysisMode) {
+                    log(layout, 'auto-always mode suppressed in Edit Mode.');
+                } else if (gtourGlobal.visitedTours[ownId]) {
+                    log(layout, 'auto-always mode tour was already launched in this session.');
+                } else if (!getActiveTour(ownId, currSheet, layout)) {
+                    var launch = true
+                    // if there is an autoLaunchCondition, calculate if it is true
+                    if (gtourGlobal.cache[ownId].autoLaunchCond) {
+                        const autoLaunchCond = await enigma.evaluate(gtourGlobal.cache[ownId].autoLaunchCond);
+                        launch = autoLaunchCond != '0';
+                        log(layout, 'auto-always launch condition is ' + launch);
+                    }
+                    if (launch) {
+                        gtourGlobal.visitedTours[ownId] = true;  // remember for this session, that the tour has been started once
+                        tooltip.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
+                    } else {
+                        log(layout, 'auto-always mode launch condition is not met.');
+                    }
                 }
 
                 // on click, tour will be restarted.
@@ -188,43 +209,43 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                 //---------------------------------------------------
                 // Auto-lauch once ... plays entire tour automatically and remember per user
                 // find out if it is the time to auto-start the tour
-                if (analysisMode && !getActiveTour(ownId, currSheet, layout)) {
-                    enigma.evaluate("=TimeStamp(Now(),'YYYYMMDDhhmmss')").then(function (serverTime) {
-                        var lStorageValue = JSON.parse(window.localStorage.getItem(lStorageKey) || lStorageDefault);
-                        if (serverTime >= gtourGlobal.cache[ownId].relaunchAfter
-                            && gtourGlobal.cache[ownId].relaunchAfter > lStorageValue.openedAt) {
+                if (!analysisMode) {
+                    log(layout, 'auto-once mode suppressed in Edit Mode.');
+                } else if (!getActiveTour(ownId, currSheet, layout)) {
+                    serverTime = await enigma.evaluate("=TimeStamp(Now(),'YYYYMMDDhhmmss')");
+                    var lStorageValue = JSON.parse(window.localStorage.getItem(lStorageKey) || lStorageDefault);
+                    var launch = true;
+                    if (gtourGlobal.cache[ownId].autoLaunchCond) {
+                        const autoLaunchCond = await enigma.evaluate(gtourGlobal.cache[ownId].autoLaunchCond);
+                        launch = autoLaunchCond != '0';
+                        log(layout, 'auto-once launch condition is ' + launch);
+                    }
+                    if (launch) {
+                        var launchedBefore = !(serverTime >= gtourGlobal.cache[ownId].relaunchAfter
+                            && gtourGlobal.cache[ownId].relaunchAfter > lStorageValue.openedAt);
+                        // if there is an autoLaunchCondition, calculate if it is true
+                        if (launchedBefore) {
+                            log(layout, 'user already launched this tour ' + lStorageValue.openedAt + '. Servertime: ' + serverTime);
+                        } else {
                             if (gtourGlobal.licensedObjs[ownId] || gtourGlobal.isOEMed != 0) {
                                 tooltip.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
                                 lStorageValue.openedAt = serverTime + ''; // save as string
                                 window.localStorage.setItem(lStorageKey, JSON.stringify(lStorageValue));
-                                if (layout.pConsoleLog) console.log(ownId, 'Stored locally: ', JSON.stringify(lStorageValue));
+                                log(layout, 'Stored locally: ' + JSON.stringify(lStorageValue));
                                 gtourGlobal.visitedTours[ownId] = true;
-                                /*
-                                tooltip.cacheHypercube(ownId, enigma, objFieldName, layout.pTourField, layout.pTourSelectVal)
-                                    .then(function (hcube) {
-                                        gtourGlobal.tooltipsCache[ownId] = hcube;
-                                        tooltip.play2(ownId, layout, 0, false, enigma, gtourGlobal, currSheet);
-                                        lStorageValue.openedAt = serverTime + ''; // save as string
-                                        window.localStorage.setItem(lStorageKey, JSON.stringify(lStorageValue));
-                                        if (layout.pConsoleLog) console.log(ownId, 'Stored locally: ', JSON.stringify(lStorageValue));
-                                    });
-                                */
 
                             } else {
-                                if (layout.pConsoleLog) console.log(ownId, 'auto-once would start now but it has no license.');
+                                log(layout, 'auto-once would start now but it has no license.');
                                 if (!gtourGlobal.noLicenseWarning[ownId]) {
                                     leonardo.msg(ownId, 'Guided-Tour Extension', noLicenseMsg('Auto-launch Once'), null, 'OK');
                                 }
                                 gtourGlobal.noLicenseWarning[ownId] = true;
                             }
-                            //gtourGlobal.visitedTours[ownId] = true;
-                        } else {
-                            if (layout.pConsoleLog) console.log(ownId, 'user already launched this tour ' + lStorageValue.openedAt + '. Servertime: ' + serverTime);
                         }
-                    })
-                } else {
-                    if (layout.pConsoleLog) console.log(ownId, 'auto-once suppressed because ' + (analysisMode ? 'analysis-mode' : 'other tour active'));
+                    }
                 }
+                //  if (layout.pConsoleLog) console.log(ownId, 'auto-once suppressed because ' + (analysisMode ? 'analysis-mode' : 'other tour active'));
+
                 // on click, tour will be restarted.
                 $(`#${ownId}_start`).click(function () {
                     if (!getActiveTour(ownId, currSheet, layout)) {
@@ -233,24 +254,9 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                             const lStorageValue = JSON.parse(window.localStorage.getItem(lStorageKey) || lStorageDefault);
                             lStorageValue.openedAt = serverTime + ''; // save as string
                             window.localStorage.setItem(lStorageKey, JSON.stringify(lStorageValue));
-                            if (layout.pConsoleLog) console.log(ownId, 'Stored locally: ', JSON.stringify(lStorageValue));
+                            log(layout, 'Stored locally: ' + JSON.stringify(lStorageValue));
                         })
                         gtourGlobal.visitedTours[ownId] = true;
-                        /*
-                        tooltip.cacheHypercube(ownId, enigma, objFieldName, layout.pTourField, layout.pTourSelectVal)
-                            .then(function (hcube) {
-                                gtourGlobal.tooltipsCache[ownId] = hcube;
-                                tooltip.play2(ownId, layout, 0, false, enigma, gtourGlobal, currSheet);
-                                enigma.evaluate("=TimeStamp(Now(),'YYYYMMDDhhmmss')").then(function (serverTime) {
-                                    const lStorageValue = JSON.parse(window.localStorage.getItem(lStorageKey) || lStorageDefault);
-                                    lStorageValue.openedAt = serverTime + ''; // save as string
-                                    window.localStorage.setItem(lStorageKey, JSON.stringify(lStorageValue));
-                                    if (layout.pConsoleLog) console.log(ownId, 'Stored locally: ', JSON.stringify(lStorageValue));
-                                })
-                                //gtourGlobal.visitedTours[ownId] = true;
-                            })
-                            .catch(function () { });
-                        */
                     }
                 })
                 //---------------------------------------------------

@@ -125,9 +125,9 @@ define(["jquery", "../editor/scripts/leonardo-msg"], function
                 do {
                     await qlikCloudApiCall('DELETE', apiUrls["2"], log);
                     status = await qlikCloudApiCall('PUT', apiUrls["2"], log, blob);
-                    if (retry > 0) await delay(250);  // wait 250 millisecs
+                    if (retry > 0) await delay(400);  // wait 250 millisecs
                     retry++;
-                } while (status != 200 && retry < 10)
+                } while (status != 200 && retry < 13)
 
                 if (status != 200) {
                     console.error('PUT file resulted in error, status ' + status);
@@ -136,7 +136,7 @@ define(["jquery", "../editor/scripts/leonardo-msg"], function
                     await qlikCloudApiCall('PUT', apiUrls["2"].replace(tourName, timeNow), log, blob);
                     return false
                 } else {
-                    console.log('saveTour PUT worked after ' + retry + ' retries');
+                    console.log('saveTour PUT worked with ' + retry + ' attempt(s)');
                     return true
                 }
 

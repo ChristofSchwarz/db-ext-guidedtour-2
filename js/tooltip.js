@@ -30,7 +30,13 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
             //resolvedTourJson.tooltips.forEach(async function (tooltip) {
             for (var tooltip of resolvedTourJson.tooltips) {
                 if (tooltip.html.indexOf('$(') > -1) {
-                    const newHtml = await resolveDollarBrackets(tooltip.html, enigma);
+                    const evalThis = "='" + tooltip.html
+                        .replace(/\'/g, "'&Chr(39)&'")
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        + "'"
+                    const newHtml = await enigma.evaluate(evalThis);
+                    //await resolveDollarBrackets(tooltip.html, enigma);
                     //console.warn(newHtml);
                     tooltip.html = newHtml;
                 }

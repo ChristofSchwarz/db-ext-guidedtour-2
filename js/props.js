@@ -208,13 +208,13 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license", "./pick
                         defaultValue: false,
                         ref: "pConsoleLog",
                         label: "console.log debugging info"
-                    }, {
+                    } /*, {
                         label: 'Formula to trigger refresh of tour',
                         type: 'string',
                         ref: 'pRefreshTrigger',
                         defaultValue: '=GetCurrentSelections()',
                         expression: 'always'
-                    }
+                    }*/
                 ])
             ]
         },
