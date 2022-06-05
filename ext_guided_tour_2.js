@@ -21,6 +21,7 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
             : ['../appcontent/', '/']
     }
 
+
     $("<style>").html(cssContent).appendTo("head");
     // $("<style>").html(cssSnow).appendTo("head");  // theme for Quill editor
 

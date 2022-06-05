@@ -1,22 +1,35 @@
 define([
     "jquery", "jquery-ui", "../quill/quill", 'leonardo-msg',
-    "text!../tour-props.html", "text!../tooltip-props.html"
+    "text!../tour-props.html", "text!../tooltip-props.html", "text!../help-texts.json"
 ], function
-    ($, ui, Quill, leonardo, tourPropsHTML, tooltipPropsHTML) {
+    ($, ui, Quill, leonardo, tourPropsHTML, tooltipPropsHTML, helpTextsRaw) {
 
-    const autoSave = true;  // tour calls save method on change of every <input> and <select> element
+    const autoSave = false;  // tour calls save method on change of every <input> and <select> element
     const origin = '*';
+    const language = 'en';
+    const triggerElements = ['input', 'select'];
 
+    // parse query-strings 
     var log = document.location.search.split('log=')[1];
     if (log) log = log.split('&')[0];
     if (log == 'false') log = false;
     if (log == 'true') log = true;
 
+    // replace any {{key?}} with the respective helptext key / language from help-texts.json
+    const helpTexts = JSON.parse(helpTextsRaw);
+    for (const helpKey in helpTexts) {
+        console.log(helpKey, helpTexts[helpKey])
+        tourPropsHTML = tourPropsHTML.replace(`{{${helpKey}}}`
+            , `<span class="lui-icon  lui-icon--help" title="${helpTexts[helpKey][language]}"></span>`);
+        tooltipPropsHTML = tooltipPropsHTML.replace(`{{${helpKey}}}`
+            , `<span class="lui-icon  lui-icon--help" title="${helpTexts[helpKey][language]}"></span>`);
+    };
+
     window.top.postMessage({ msg: 'editorReady' }, origin);
     setTimeout(function () { $('#wait4msg').show(); }, 2000);
 
     window.onmessage = function (event) {
-        if (log) console.warn('Tour Editor got message', event.data);
+        if (log) console.log('Tour Editor got message', event.data);
 
         if (event.data.msg == 'putToDOM') {
 
@@ -42,6 +55,15 @@ define([
             var $tabs = $('#tabs').tabs();
 
             tourJsonIntoDOM(tourJson);
+
+            triggerElements.forEach(function (tag) {
+                console.log('register ', `.gtour-tabs #1 ${tag}`);
+                $(`#tab-1 ${tag}`).on('change', function () {
+                    console.log('change');
+                    mayBeChangeVisibility(1);
+                })
+            })
+            mayBeChangeVisibility(1);
 
             if (autoSave) autoSaveOnEvents('#tab-1-accordion');
 
@@ -84,17 +106,7 @@ define([
                 selector: selector
             }, origin);
 
-        } /*else if (event.data.msg == 'getActiveTab') {
-
-            const activeTab = $('.ui-tabs-active').attr('id');
-            // received request to return the current active Tab number from main extension
-            window.top.postMessage({
-                msg: event.data.nextMsg,
-                activeTab: activeTab,
-                tourJson: DOMtoTourJson()
-            }, origin);
-
-        } */ else if (event.data.msg == 'pasteSelector') {
+        } else if (event.data.msg == 'pasteSelector') {
 
             const activeTab = $('.ui-tabs-active').attr('id');
             $('#tab-' + activeTab + '-accordion [key="selector"]').val(event.data.selector);
@@ -111,9 +123,13 @@ define([
         })
     };
 
+    function expertMode() {
+        alert('expert Mode');
+    }
+
     function autoSaveOnEvents(selector) {
         // registers a on-change event on relevant html-tags and triggers an auto-save
-        ['input', 'select'].forEach(function (tag) {
+        triggerElements.forEach(function (tag) {
 
             $(selector + ' ' + tag).on('change', function () {
                 // store.saveTour(tour, storageProvider, store.createTourJson('#tabs'), app);
@@ -137,11 +153,11 @@ define([
         acp.toggle(); // hide after first rendering
 
         $(`#btn-${selector}${newid}`).click(function () {
-            // adjust the position
+            // adjust the position of acolorpicker
 
             const newTop = $(`#inp-${selector}${newid}`).position().top + $(`#inp-${selector}${newid}`).height() + 10;
             const newLeft = $(`#btn-${selector}${newid}`).position().left - 232;
-            $(`#${selector}-picker${newid}`).css({ "top": newTop + 'px', "left": newLeft + 'px' });
+            $(`#${selector}-picker${newid}`).css({ "top": newTop + 'px', "left": newLeft + 'px', "z-index": 20 });
             acp.setColor($(`#inp-${selector}${newid}`).val() || defaultColor);
             const isHidden = $(`#${selector}-picker${newid} .a-color-picker`).hasClass('hidden');
             $('.a-color-picker').addClass('hidden'); // hide all other color pickers;
@@ -244,14 +260,6 @@ define([
             }
         });
 
-        // begin test
-
-
-
-        // end test
-
-
-
         // register auto-preview when the tab will be clicked
         $('.gtour-tabs #' + newid).on('click', function () {
             //console.log('try to preview ' + newid);
@@ -273,10 +281,21 @@ define([
 
         if (autoSave) autoSaveOnEvents(`#tab-${newid}-accordion`);
 
+        triggerElements.forEach(function (tag) {
+            console.log('register ', `.gtour-tabs #${newid} ${tag}`);
+            $(`#tab-${newid} ${tag}`).on('change', function () {
+                console.log('change');
+                mayBeChangeVisibility(newid);
+            })
+        })
+        mayBeChangeVisibility(newid);
+
         // Make added tab active  
         if (selectAfterCreation) {
             $("#tabs").find('li a[href="#tab-' + newid + '"]').trigger("click");
         }
+
+
     }
 
 
@@ -405,4 +424,80 @@ define([
 
     }
 
+    function mayBeChangeVisibility(tooltipIdx) {
+
+        console.log(`mayBeChangeVisibility(${tooltipIdx})`);
+
+        //const key = function (key) { return `[key="${key}"]` };
+        const key = function (key) { return `#tab-${tooltipIdx} [key="${key}"]` };
+        const cl = '.gtour-td';
+        const dis = 'gtour-disable';
+
+        // hide dependency of "mode" selection
+        switch ($(key('mode')).val()) {
+            case 'click':
+                $(key('autoLaunchCond')).closest(cl).addClass(dis);
+                $(key('relaunchAfter')).closest(cl).addClass(dis);
+                break;
+            case 'auto-once':
+                $(key('autoLaunchCond')).closest(cl).removeClass(dis);
+                $(key('relaunchAfter')).closest(cl).removeClass(dis);
+                break;
+            case 'auto-always':
+                $(key('autoLaunchCond')).closest(cl).removeClass(dis);
+                $(key('relaunchAfter')).closest(cl).addClass(dis);
+                break;
+        }
+
+        // when highlight is checked unhide additional params
+        if ($(key('highlight')).prop('checked')) {
+            $(key('highlightattr')).closest(cl).removeClass(dis);
+            $(key('highlightvalue')).closest(cl).removeClass(dis);
+            $(key('otherSelector')).closest(cl).removeClass(dis);
+        } else {
+            $(key('highlightattr')).closest(cl).addClass(dis);
+            $(key('highlightvalue')).closest(cl).addClass(dis);
+            $(key('otherSelector')).closest(cl).addClass(dis);
+        }
+
+        for (var i = 1; i <= 3; i++) {
+            if ($(key(`action${i}_use`)).prop('checked')) {
+                $(key(`action${i}_timing`)).closest(cl).removeClass(dis);
+                $(key(`action${i}_type`)).closest(cl).removeClass(dis);
+                switch ($(key(`action${i}_type`)).val()) {
+                    case 'select':
+                        $(key(`action${i}_field`)).closest(cl).removeClass(dis);
+                        $(key(`action${i}_var`)).closest(cl).addClass(dis);
+                        $(key(`action${i}_value`)).closest(cl).removeClass(dis);
+                        $(key(`action${i}_sheet`)).closest(cl).addClass(dis);
+                        break;
+                    case 'clear':
+                        $(key(`action${i}_field`)).closest(cl).removeClass(dis);
+                        $(key(`action${i}_var`)).closest(cl).addClass(dis);
+                        $(key(`action${i}_value`)).closest(cl).removeClass(dis);
+                        $(key(`action${i}_sheet`)).closest(cl).addClass(dis);
+                        break;
+                    case 'variable':
+                        $(key(`action${i}_field`)).closest(cl).addClass(dis);
+                        $(key(`action${i}_var`)).closest(cl).removeClass(dis);
+                        $(key(`action${i}_value`)).closest(cl).removeClass(dis);
+                        $(key(`action${i}_sheet`)).closest(cl).addClass(dis);
+                        break;
+                    case 'goto-sheet':
+                        $(key(`action${i}_field`)).closest(cl).addClass(dis);
+                        $(key(`action${i}_var`)).closest(cl).addClass(dis);
+                        $(key(`action${i}_value`)).closest(cl).addClass(dis);
+                        $(key(`action${i}_sheet`)).closest(cl).removeClass(dis);
+                        break;
+                }
+            } else {
+                $(key(`action${i}_timing`)).closest(cl).addClass(dis);
+                $(key(`action${i}_type`)).closest(cl).addClass(dis);
+                $(key(`action${i}_field`)).closest(cl).addClass(dis);
+                $(key(`action${i}_var`)).closest(cl).addClass(dis);
+                $(key(`action${i}_value`)).closest(cl).addClass(dis);
+                $(key(`action${i}_sheet`)).closest(cl).addClass(dis);
+            }
+        }
+    }
 })

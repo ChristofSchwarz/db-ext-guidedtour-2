@@ -58,7 +58,7 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint", "text!../editor-div
                     + '?log=' + arg.pConsoleLog);
 
                 window.onmessage = async function (event) {
-                    console.warn('Parent got message', event.data);
+                    console.log('Parent got message', event.data);
 
                     if (event.data.msg == 'editorReady') {
 

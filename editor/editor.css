@@ -490,3 +490,33 @@ a.ui-button:active,
 .can-be-formula {
   border: 1.5px orange solid !important;
 }
+
+/* .gtour-tbl2 td {
+  width: 50%;
+} */
+
+.gtour-table {
+  display: table;
+  width: 100%;
+}
+
+.gtour-tr {
+  display: table-row;
+}
+
+.gtour-td {
+  display: table-cell;
+  padding: 2px;
+}
+
+.gtour-2cells .gtour-td {
+  width: 50%;
+}
+
+.gtour-3cells .gtour-td {
+  width: 33.3%;
+}
+
+.gtour-disable {
+  opacity: 0.1;
+}

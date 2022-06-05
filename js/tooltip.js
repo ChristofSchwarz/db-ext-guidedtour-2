@@ -383,7 +383,7 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                                 style="${tooltipStyle};display:none;position:absolute;">
                                 <!--${selector}-->
                                 <span style="opacity:0.6;">${tooltipNo + 1}/${tourJson.tooltips.length}</span>
-                                <span class="lui-icon  lui-icon--close" style="float:right;cursor:pointer;${tourJson.mode == 'hover' ? 'opacity:0;' : ''}" id="${ownId}_quit"></span>
+                                <span class="lui-icon  lui-icon--close" id="${ownId}_quit" style="float:right;cursor:pointer;display:${tooltipJson.noClose ? 'none' : 'block'};${tourJson.mode == 'hover' ? 'opacity:0;' : ''}"></span>
                                 ${knownObjId == 0 ? '<br/><div class="gtour-err">Object <strong>' + qObjId + '</strong> not found!</div>' : '<br/>'}
                                 ${knownObjId > 1 ? '<br/><div class="gtour-err"><strong>' + qObjId + '</strong> selects ' + knownObjId + ' objects!</div>' : '<br/>'}
                                 <div id="${ownId}_text" class="gtour-text" style="font-size:${tourJson.fontsize}">

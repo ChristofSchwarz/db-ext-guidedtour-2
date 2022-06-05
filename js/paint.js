@@ -186,14 +186,12 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                     // if there is an autoLaunchCondition, calculate if it is true
                     if (gtourGlobal.cache[ownId].autoLaunchCond) {
                         const autoLaunchCond = await enigma.evaluate(gtourGlobal.cache[ownId].autoLaunchCond);
-                        launch = autoLaunchCond != '0';
-                        log(layout, 'auto-always launch condition is ' + launch);
+                        launch = autoLaunchCond != '0' && !autoLaunchCond == "False";
+                        log(layout, 'auto-always launch condition is ' + autoLaunchCond);
                     }
                     if (launch) {
                         gtourGlobal.visitedTours[ownId] = true;  // remember for this session, that the tour has been started once
                         tooltip.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
-                    } else {
-                        log(layout, 'auto-always mode launch condition is not met.');
                     }
                 }
 
