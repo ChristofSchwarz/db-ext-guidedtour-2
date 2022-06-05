@@ -4,4 +4,4 @@
 
 Meanwhile check out version 1 at https://github.com/ChristofSchwarz/db_ext_guidedtour
 
-Documentation of V2 -> https://github.com/ChristofSchwarz/db-ext-guidedtour-2/doc
+[Documentation of v2](https://github.com/ChristofSchwarz/db-ext-guidedtour-2/tree/main/doc)
