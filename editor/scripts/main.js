@@ -122,10 +122,11 @@ define([
             setTimeout(function () { resolve() }, millis)
         })
     };
-
+    /*
     function expertMode() {
         alert('expert Mode');
     }
+    */
 
     function autoSaveOnEvents(selector) {
         // registers a on-change event on relevant html-tags and triggers an auto-save
@@ -311,6 +312,8 @@ define([
             $("#tabs").find(".ui-tabs-nav li a[href='#" + tabIndex + "']").parent().remove();
             $("#tabs").find("div[id=" + tabIndex + "]").remove();
 
+            window.top.postMessage({ msg: 'closePreview' }, origin);  // close preview tooltip
+
             // One removing process done we refresh the tab again  
             $("#tabs").tabs("refresh");
             leonardo.close('luimsg');
@@ -447,6 +450,22 @@ define([
                 $(key('autoLaunchCond')).closest(cl).removeClass(dis);
                 $(key('relaunchAfter')).closest(cl).addClass(dis);
                 break;
+        }
+
+        if ($(key('lookupDataModel')).prop('checked')) {
+            $(key('fieldWithId')).closest(cl).removeClass(dis);
+            $(key('fieldWithText')).closest(cl).removeClass(dis);
+            $(key('languageAsRow')).closest(cl).removeClass(dis);
+            if ($(key('languageAsRow')).prop('checked')) {
+                $(key('fieldWithLanguage')).closest(cl).removeClass(dis);
+            } else {
+                $(key('fieldWithLanguage')).closest(cl).addClass(dis);
+            }
+        } else {
+            $(key('fieldWithId')).closest(cl).addClass(dis);
+            $(key('fieldWithText')).closest(cl).addClass(dis);
+            $(key('languageAsRow')).closest(cl).addClass(dis);
+            $(key('fieldWithLanguage')).closest(cl).addClass(dis);
         }
 
         // when highlight is checked unhide additional params

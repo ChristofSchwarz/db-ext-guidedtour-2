@@ -16,7 +16,16 @@
                     <input class="lui-checkbox__input" type="checkbox" aria-label="Label" key="noClose" />
                     <div class="lui-checkbox__check-wrap">
                         <span class="lui-checkbox__check"></span>
-                        <span class="lui-checkbox__check-text">Hide "X" {{hidex?}}</span>
+                        <span class="lui-checkbox__check-text">Hide "X" {{noClose?}}</span>
+                    </div>
+                </label>
+            </div>
+            <div class="gtour-td">
+                <label class="lui-checkbox" style="padding-bottom:10px;">
+                    <input class="lui-checkbox__input" type="checkbox" aria-label="Label" key="hideNextButton" />
+                    <div class="lui-checkbox__check-wrap">
+                        <span class="lui-checkbox__check"></span>
+                        <span class="lui-checkbox__check-text">Hide Next Button</span>
                     </div>
                 </label>
             </div>
@@ -76,7 +85,24 @@
                 <input key="delaybefore" type="number" class="lui-input" />
             </div>
         </div>
-        <!-- <div class="lui-label">&nbsp;</div> empty row -->
+    </div>
+    <div class="gtour-table">
+        <div class="gtour-tr gtour-1cell">
+            <!-- div class="gtour-td">
+                <label class="lui-label">Source of text</label>
+                <select key="sourceOfText" class="lui-select">
+                    <option value="editor" selected>Built-in Editor</option>
+                    <option value="lu-selector">Lookup selector</option>
+                    <option value="lu-customId">Lookup custom-Id</option>
+                </select>
+            </div -->
+            <div class="gtour-td">
+                <label class="lui-label">Help Text lookup id if different to Selector {{lookupId?}}</label>
+                <input key="lookupId" class="lui-input" />
+            </div>
+        </div>
+    </div>
+    <div class="gtour-table">
         <!-- <label class="lui-checkbox" style="padding-bottom:10px;">
             <input class="lui-checkbox__input" type="checkbox" aria-label="Label" key="useOtherSelector" />
             <div class="lui-checkbox__check-wrap">
@@ -94,6 +120,12 @@
                     </div>
                 </label>
             </div>
+        </div>
+        <div class="gtour-tr gtour-3cells">
+            <div class="gtour-td">
+                <label class="lui-label">Other obj selector</label>
+                <input key="otherSelector" class="lui-input" />
+            </div>
             <div class="gtour-td">
                 <label class="lui-label">Highlight CSS attribute</label>
                 <input key="highlightattr" class="lui-input" value="background-color" />
@@ -101,14 +133,6 @@
             <div class="gtour-td">
                 <label class="lui-label">Highlight CSS value</label>
                 <input key="highlightvalue" class="lui-input" value="yellow" />
-            </div>
-        </div>
-    </div>
-    <div class="gtour-table">
-        <div class="gtour-tr">
-            <div class="gtour-td">
-                <label class="lui-label">Other obj selector</label>
-                <input key="otherSelector" class="lui-input" />
             </div>
         </div>
     </div>
@@ -195,15 +219,15 @@
         <div class="gtour-tr gtour-3cells">
             <div class="gtour-td">
                 <label class="lui-label">Field</label>
-                <input key="action1_field" class="lui-input" />
+                <input key="action1_field" class="lui-input  can-be-formula" />
             </div>
             <div class="gtour-td">
                 <label class="lui-label">Field</label>
-                <input key="action2_field" class="lui-input" />
+                <input key="action2_field" class="lui-input  can-be-formula" />
             </div>
             <div class="gtour-td">
                 <label class="lui-label">Field</label>
-                <input key="action3_field" class="lui-input" />
+                <input key="action3_field" class="lui-input  can-be-formula" />
             </div>
         </div>
         <div class="gtour-tr gtour-3cells">
@@ -260,17 +284,6 @@
                 <div class="lui-input-group">
                     <input key="autonextcondi" class="lui-input  can-be-formula" style="z-index:auto;" />
                 </div>
-            </div>
-        </div>
-        <div class="gtour-tr">
-            <div class="gtour-td">
-                <label class="lui-checkbox" style="padding-bottom:10px;">
-                    <input class="lui-checkbox__input" type="checkbox" aria-label="Label" key="hideNextButton" />
-                    <div class="lui-checkbox__check-wrap">
-                        <span class="lui-checkbox__check"></span>
-                        <span class="lui-checkbox__check-text">Hide Next Button</span>
-                    </div>
-                </label>
             </div>
         </div>
     </div>

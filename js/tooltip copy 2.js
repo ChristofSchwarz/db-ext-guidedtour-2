@@ -285,10 +285,10 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                     var bgColor;
                     var orientation = currElem.orientation;
                     //console.warn('orientation', orientation, currElem);
-                    var pointToSelector;
-                    var selectorFormat; // will be "qlik-object", "qlik-container" or "css"
-                    var highlightSelector; // the object that needs to be focussed (is the grand-grand-grand...parent of the selector when "qlik-container")
-                    var fadeOutSelector, fadeoutSelector2;
+                    // var pointToSelector;
+                    // var selectorFormat; // will be "qlik-object", "qlik-container" or "css"
+                    // var highlightSelector; // the object that needs to be focussed (is the grand-grand-grand...parent of the selector when "qlik-container")
+                    // var fadeOutSelector, fadeoutSelector2;
                     var knownObjId;
                     var chart;
 
@@ -301,12 +301,12 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                         // qlik object id format
                         //console.log(ownId + ' Qlik object:', qObjId);
                         selectorFormat = 'qlik-object';
-                        pointToSelector = gtourGlobal.isSingleMode ? `[data-qid="${qObjId}"]` : `[tid="${qObjId}"]`;
-                        highlightSelector = pointToSelector;
+                        currElem.pointToSelector = gtourGlobal.isSingleMode ? `[data-qid="${qObjId}"]` : `[tid="${qObjId}"]`;
+                        highlightSelector = currElem.pointToSelector;
                         fadeOutSelector = '.cell:not(' + highlightSelector + ')';
                         highlightSelector2 = null;
                         fadeOutSelector2 = null;
-                        //knownObjId = $(pointToSelector).length;
+                        // knownObjId = $(pointToSelector).length;
 
                     } else if (qObjId.indexOf('[data-itemid=') > -1) {
                         // the object is part of a Qlik Tabbed Container 
@@ -316,7 +316,7 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                         fadeOutSelector = '.cell:not(' + highlightSelector + ')';
                         highlightSelector2 = null;
                         fadeOutSelector2 = null;
-                        //knownObjId = $(pointToSelector).length;
+                        // knownObjId = $(pointToSelector).length;
                         $(pointToSelector).trigger('click'); // click on the tab in the container
 
                     } else if ($('#grid-wrap').find(qObjId).length == 0) {
@@ -327,12 +327,12 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                         fadeOutSelector = '.cell';
                         highlightSelector2 = null;
                         fadeOutSelector2 = null;
-                        //knownObjId = $(pointToSelector).length;
+                        // knownObjId = $(pointToSelector).length;
 
                     } else if ($(qObjId).attr('class').indexOf('grouped-container-') > -1) {
                         // css selector inside a grouped container (extension by Dennis Jaskowiak)
                         selectorFormat = 'grouped-container-cell'
-                        pointToSelector = qObjId;
+                        // pointToSelector = qObjId;
                         highlightSelector = '[tid="' + $(pointToSelector).closest('.cell').attr('tid') + '"]';  // find the parent with class "cell"
                         fadeOutSelector = '.cell:not(' + highlightSelector + ')';
                         highlightSelector2 = qObjId;
@@ -347,7 +347,7 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                         highlightSelector2 = null;
                         fadeOutSelector2 = null;
                     }
-
+                    knownObjId = $(pointToSelector).length;
 
                     function renderTooltip() {
                         // if action has to be done prior to showing the tooltip, now it's the time

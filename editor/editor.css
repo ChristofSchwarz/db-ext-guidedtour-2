@@ -509,6 +509,9 @@ a.ui-button:active,
   padding: 2px;
 }
 
+.gtour-1cell .gtour-td {
+  width: 100%;
+}
 .gtour-2cells .gtour-td {
   width: 50%;
 }

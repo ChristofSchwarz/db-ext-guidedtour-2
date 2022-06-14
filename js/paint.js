@@ -88,7 +88,7 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
             if (activeTooltip >= 0 && gtourGlobal.cache[ownId].tooltips[activeTooltip].autonextcondi) {
                 enigma.evaluate(gtourGlobal.cache[ownId].tooltips[activeTooltip].autonextcondi)
                     .then(function (res) {
-                        if (res == -1) {
+                        if (res == -1 || res == 1) {
                             console.log('tooltip #' + (activeTooltip + 1) + ' auto-next-condition ('
                                 + gtourGlobal.cache[ownId].tooltips[activeTooltip].autonextcondi + ') was true.');
                             $(`#${ownId}_next`).trigger('click');

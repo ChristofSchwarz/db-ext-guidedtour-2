@@ -11,7 +11,19 @@
   "bypass?": {
     "en": "Check this if you want to skip this toolip, it is 'commented out' then"
   },
-  "hidex?": {
+  "noClose?": {
     "en": "Check this if you want to hide the Close button (X) for this tooltip"
+  },
+  "languageAsRow?": {
+    "en": "Check this if your data model provides different languages for the same tooltip in different rows"
+  },
+  "lookupDataModel?": {
+    "en": "Check this if you plan to maintain the tooltip texts in a data table rather than in the HTML editor here."
+  },
+  "fieldWithId?": {
+    "en": "Field that is used to lookup the selector Id for the help text."
+  },
+  "lookupId?": {
+    "en": "Lookup id in data model to query the tooltip text from there."
   }
 }
