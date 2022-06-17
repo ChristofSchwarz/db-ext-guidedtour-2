@@ -139,9 +139,14 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                 currElem.highlightSelector = `[tid="${$(currElem.pointToSelector).closest('.cell').attr('tid')}"]`;
                 currElem.fadeOutSelector = `.cell:not(${currElem.highlightSelector})`;
             }
-            currElem.highlightSelector2 = qObjId;
-            currElem.fadeOutSelector2 = `.grouped-container-main [id^="${(qObjId).substr(1, (qObjId).length - 2)}"]:not(${qObjId})`;
-
+            // if it is a grouped-container in a grouped-container, no 2nd highlighting
+            if ($(qObjId).closest('.grouped-container-main').parent().closest('.grouped-container-main').length) {
+                currElem.highlightSelector2 = null;
+                currElem.fadeOutSelector2 = null;
+            } else {
+                currElem.highlightSelector2 = qObjId;
+                currElem.fadeOutSelector2 = `.grouped-container-main [id^="${(qObjId).substr(1, (qObjId).length - 2)}"]:not(${qObjId})`;
+            }
         } else {
             // css selector inside the sheet grid, not a special known object
             selectorFormat = 'css-on-grid';
