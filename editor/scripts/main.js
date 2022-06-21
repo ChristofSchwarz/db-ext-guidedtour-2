@@ -221,6 +221,7 @@ define([
         $('#tab-' + newid + '-accordion .action_types').append(`
             <option value="select" selected>Select field value</option>
             <option value="clear">Clear field selection</option>
+            <option value="clear-all">Clear all selections</option>
             <option value="variable">Set variable</option>
             <option value="goto-sheet">Go to sheet</option>
         `);
@@ -493,7 +494,13 @@ define([
                     case 'clear':
                         $(key(`action${i}_field`)).closest(cl).removeClass(dis);
                         $(key(`action${i}_var`)).closest(cl).addClass(dis);
-                        $(key(`action${i}_value`)).closest(cl).removeClass(dis);
+                        $(key(`action${i}_value`)).closest(cl).addClass(dis);
+                        $(key(`action${i}_sheet`)).closest(cl).addClass(dis);
+                        break;
+                    case 'clear-all':
+                        $(key(`action${i}_field`)).closest(cl).addClass(dis);
+                        $(key(`action${i}_var`)).closest(cl).addClass(dis);
+                        $(key(`action${i}_value`)).closest(cl).addClass(dis);
                         $(key(`action${i}_sheet`)).closest(cl).addClass(dis);
                         break;
                     case 'variable':

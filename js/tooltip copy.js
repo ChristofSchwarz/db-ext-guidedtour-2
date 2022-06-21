@@ -4,10 +4,12 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
 
     return {
 
+        // ---------------------------------------------------------------------------------------------------
         play: function (gtourGlobal, ownId, layout, tooltipNo, reset, enigma, currSheet, lStorageKey, lStorageVal, previewMode) {
             play(gtourGlobal, ownId, layout, tooltipNo, reset, enigma, currSheet, lStorageKey, lStorageVal, previewMode)
         },
 
+        // ---------------------------------------------------------------------------------------------------
         resolveQlikCalcs: async function (tourJson) {
 
             // if in some specific keys of tourJson a Qlik Formula starting with $( ... ) is found, 
@@ -16,8 +18,14 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
             const app = qlik.currApp();
             const enigma = app.model.enigmaModel;
 
-            const resolveTourFields = ['btnLabelNext', 'btnLabelDone'];
-            const resolveTooltipFields = ['action1_value', 'action2_value', 'action3_value'];
+            // below fields are calculated as qlik formula, if their content starts with an "="
+            const resolveTourFields = [
+                'btnLabelNext', 'btnLabelDone', 'fieldWithText'
+            ];
+            const resolveTooltipFields = [
+                'action1_value', 'action2_value', 'action3_value',
+                'action1_field', 'action2_field', 'action3_field'
+            ];
             //var resolvedTourJson = { tooltips: [] };
             var resolvedTourJson = JSON.parse(JSON.stringify(tourJson));
 
@@ -30,7 +38,13 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
             //resolvedTourJson.tooltips.forEach(async function (tooltip) {
             for (var tooltip of resolvedTourJson.tooltips) {
                 if (tooltip.html.indexOf('$(') > -1) {
-                    const newHtml = await resolveDollarBrackets(tooltip.html, enigma);
+                    const evalThis = "='" + tooltip.html
+                        .replace(/\'/g, "'&Chr(39)&'")
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        + "'"
+                    const newHtml = await enigma.evaluate(evalThis);
+                    //await resolveDollarBrackets(tooltip.html, enigma);
                     //console.warn(newHtml);
                     tooltip.html = newHtml;
                 }
@@ -46,6 +60,7 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
 
     }
 
+    // ---------------------------------------------------------------------------------------------------
     function isScrolledIntoView(elem) {
         var docViewTop = $(window).scrollTop();
         var docViewBottom = docViewTop + $(window).height();
@@ -56,7 +71,7 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
         return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop));
     }
 
-
+    // ---------------------------------------------------------------------------------------------------
     function isQlikObjId(selector) {
         // returns true if the selector is a Qlik Object Id or false if it is a DOM selector (CSS)
         return selector.indexOf('#') == -1 && selector.indexOf('.') == -1 && selector.indexOf('=') == -1
@@ -64,6 +79,97 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
 
     }
 
+    // ---------------------------------------------------------------------------------------------------
+    function setAllSelectors(qObjId, currElem, gtourGlobal, layout) {
+
+        // 5 selectors are defined by "setAllSelectors" function and set as object keys in currElem: 
+        // pointToSelector is the DOM object that will define the position of the tooltip
+        // highlightSelector is the DOM object that will be highlighted (the only object not faded)
+        // fadeOutSelector are the DOM objects that will be faded
+        // highlightSelector2 is the child DOM object (in grouped-container) that will be highlighted (the only object not faded)
+        // fadeOutSelector2 are the child DOM objects (in grouped-container) that will be faded
+
+        if (isQlikObjId(qObjId)) {
+            // qlik object id format
+            selectorFormat = 'qlik-object';
+            if (gtourGlobal.isSingleMode) {
+                selectorFormat += ' (single-mode)';
+                currElem.pointToSelector = `[data-qid="${qObjId}"]`;
+                currElem.fadeOutSelector = `.qvt-sheet [data-qid]:not(${currElem.pointToSelector})`;
+            } else {
+                currElem.pointToSelector = `[tid="${qObjId}"]`;
+                currElem.fadeOutSelector = `.cell:not(${currElem.pointToSelector})`;
+            }
+            currElem.highlightSelector = currElem.pointToSelector;
+            currElem.highlightSelector2 = null;
+            currElem.fadeOutSelector2 = null;
+            // knownObjId = $(currElem.pointToSelector).length;
+
+        } else if (qObjId.indexOf('[data-itemid=') > -1) {
+            // the object is part of a Qlik Tabbed Container (standard element)
+            selectorFormat = 'qlik-container';
+            currElem.pointToSelector = qObjId;
+            if (gtourGlobal.isSingleMode) {
+                selectorFormat += ' (single-mode)';
+                currElem.highlightSelector = `[data-qid="${$(currElem.pointToSelector).closest('[data-qid]').attr('data-qid')}"]`;
+                currElem.fadeOutSelector = `.qvt-sheet [data-qid]:not(${currElem.highlightSelector})`;
+            } else {
+                currElem.highlightSelector = `[tid="${$(currElem.pointToSelector).closest('.cell').attr('tid')}"]`;
+                currElem.fadeOutSelector = `.cell:not(${currElem.highlightSelector})`;
+            }
+            currElem.highlightSelector2 = null;
+            currElem.fadeOutSelector2 = null;
+            // knownObjId = $(currElem.pointToSelector).length;
+            $(currElem.pointToSelector).trigger('click'); // click on the tab in the container
+
+        } else if ($('#grid-wrap').find(qObjId).length == 0) {
+            // css selector outside the sheet grid
+            selectorFormat = 'css-outside-grid';
+            currElem.pointToSelector = qObjId;
+            currElem.highlightSelector = null;
+            currElem.fadeOutSelector = '.cell';
+            currElem.highlightSelector2 = null;
+            currElem.fadeOutSelector2 = null;
+            // knownObjId = $(currElem.pointToSelector).length;
+
+        } else if ($(qObjId).attr('class').indexOf('grouped-container-') > -1) {
+            // css selector inside a grouped container (extension by Dennis Jaskowiak)
+            selectorFormat = 'grouped-container-cell'
+            currElem.pointToSelector = qObjId;
+            if (gtourGlobal.isSingleMode) {
+                currElem.highlightSelector = `[data-qid="${$(currElem.pointToSelector).closest('[data-qid]').attr('data-qid')}"]`;
+                currElem.fadeOutSelector = `.qvt-sheet [data-qid]:not(${currElem.highlightSelector})`;
+            } else {
+                currElem.highlightSelector = `[tid="${$(currElem.pointToSelector).closest('.cell').attr('tid')}"]`;
+                currElem.fadeOutSelector = `.cell:not(${currElem.highlightSelector})`;
+            }
+            // if it is a grouped-container in a grouped-container, no 2nd highlighting
+            if ($(qObjId).closest('.grouped-container-main').parent().closest('.grouped-container-main').length) {
+                currElem.highlightSelector2 = null;
+                currElem.fadeOutSelector2 = null;
+            } else {
+                currElem.highlightSelector2 = qObjId;
+                currElem.fadeOutSelector2 = `.grouped-container-main [id^="${(qObjId).substr(1, (qObjId).length - 2)}"]:not(${qObjId})`;
+            }
+        } else {
+            // css selector inside the sheet grid, not a special known object
+            selectorFormat = 'css-on-grid';
+            currElem.pointToSelector = qObjId;
+            currElem.highlightSelector = '[tid="' + $(currElem.pointToSelector).closest('.cell').attr('tid') + '"]';  // find the parent with class "cell"
+            currElem.fadeOutSelector = '.cell:not(' + currElem.highlightSelector + ')';
+            currElem.highlightSelector2 = null;
+            currElem.fadeOutSelector2 = null;
+        }
+
+        //if (layout.pConsoleLog) {
+        console.log('function setAllSelectors');
+        console.log(`selectorFormat ${selectorFormat}, pointToSelector ${currElem.pointToSelector}`);
+        console.log(`highlightSelector ${currElem.highlightSelector}, fadeOutSelector ${currElem.fadeOutSelector}`);
+        console.log(`highlightSelector2 ${currElem.highlightSelector2}, fadeOutSelector2 ${currElem.fadeOutSelector2}`);
+        //}
+    }
+
+    // ---------------------------------------------------------------------------------------------------
     function findPositions(selector, rootContainer, tooltipSel, arrowHeadSize = 16, bgColor, prefOrient) {
 
         // analyses and finds the best position for the given tooltip.
@@ -190,19 +296,20 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
     }
 
 
-    //    =========================================================================================
+    // ---------------------------------------------------------------------------------------------------
     function play(gtourGlobal, ownId, layout, tooltipNo, reset, enigma, currSheet
         , lStorageKey, lStorageVal, previewMode = false) {
-        //=========================================================================================
 
-        const tourJson = gtourGlobal.cache[ownId];
+
+        const tourJson = await resolveQlikFormulas(gtourGlobal.cache[ownId]);
+        const tooltipJson = tourJson.tooltips[tooltipNo];
         const arrowHeadSize = tourJson.arrowHead || 16;
         const rootContainer = gtourGlobal.isSingleMode ? '#qv-stage-container' : '#qv-page-container';
         const finallyScrollTo = '#sheet-title';
         const opacity = tourJson.mode == 'hover' ? 1 : (tourJson.opacity || 1);
         const licensed = gtourGlobal.isOEMed ? true : gtourGlobal.licensedObjs[ownId];
         const isLast = tooltipNo >= (tourJson.tooltips.length - 1);
-        const tooltipJson = tourJson.tooltips[tooltipNo];
+
 
         if (layout.pConsoleLog) console.log(`${ownId} Play tour (previewMode ${previewMode}, tooltip ${tooltipNo}, isLast ${isLast}, licensed ${licensed}, lStorageKey ${lStorageKey})`);
 
@@ -278,60 +385,44 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                     var fontColor;
                     var bgColor;
                     var orientation = currElem.orientation;
-                    //console.warn('orientation', orientation, currElem);
-                    var selector;
-                    var selectorFormat; // will be "qlik-object", "qlik-container" or "css"
-                    var fadeSelector; // the object that needs to be focussed (is the grand-grand-grand...parent of the selector when "qlik-container")
                     var knownObjId;
-                    var chart;
+                    // var chart;
 
-                    if (isQlikObjId(qObjId)) {
-                        // qlik object id format
-                        //console.log(ownId + ' Qlik object:', qObjId);
-                        selectorFormat = 'qlik-object';
-                        selector = gtourGlobal.isSingleMode ? `[data-qid="${qObjId}"]` : `[tid="${qObjId}"]`;
-                        fadeSelector = selector;
-                        // knownObjId = $(selector).length;
+                    // 5 selectors are set by function "setAllSelectors" in currElem: 
+                    // pointToSelector, highlightSelector, fadeOutSelector, highlightSelector2, fadeOutSelector2 
 
-                    } else if (qObjId.indexOf('[data-itemid=') > -1) {
-                        selectorFormat = 'qlik-container';
-                        selector = qObjId;
-                        fadeSelector = '[tid="' + $(selector).closest('.cell').attr('tid') + '"]';  // find the parent with class "cell"
-                        // knownObjId = $(selector).length;
-                        $(selector).trigger('click'); // click on the tab in the container
+                    setAllSelectors(qObjId, currElem, gtourGlobal, layout);
 
-                    } else {
-                        // css selector format
-                        //console.log(ownId + ' CSS selector format:', qObjId);
-                        selectorFormat = 'css';
-                        selector = qObjId;
-                        fadeSelector = null;
-                        // knownObjId = $(selector).length;
-                    }
-
+                    knownObjId = $(currElem.pointToSelector).length;
 
                     function renderTooltip() {
                         // if action has to be done prior to showing the tooltip, now it's the time
 
                         if (!previewMode && licensed && tooltipJson.action1_use && tooltipJson.action1_timing == 'before') {
                             doAction(tooltipJson.action1_type, tooltipJson.action1_field, tooltipJson.action1_var
-                                , tooltipJson.action1_value, tooltipJson.action1_sheet, selector)
+                                , tooltipJson.action1_value, tooltipJson.action1_sheet, currElem.pointToSelector)
                         }
                         if (!previewMode && licensed && tooltipJson.action2_use && tooltipJson.action2_timing == 'before') {
                             doAction(tooltipJson.action2_type, tooltipJson.action2_field, tooltipJson.action2_var
-                                , tooltipJson.action2_value, tooltipJson.action2_sheet, selector)
+                                , tooltipJson.action2_value, tooltipJson.action2_sheet, currElem.pointToSelector)
                         }
                         if (!previewMode && licensed && tooltipJson.action3_use && tooltipJson.action3_timing == 'before') {
                             doAction(tooltipJson.action3_type, tooltipJson.action3_field, tooltipJson.action3_var
-                                , tooltipJson.action3_value, tooltipJson.action3_sheet, selector)
+                                , tooltipJson.action3_value, tooltipJson.action3_sheet, currElem.pointToSelector)
                         }
 
                         // give the DOM some moments for the object to appear (relevant with action goto-sheet)
 
-                        waitForElement(selector, undefined, previewMode ? 1 : undefined)
+                        waitForElement(currElem.pointToSelector, undefined, previewMode ? 1 : undefined)
                             .then(function (res) {
 
-                                knownObjId = $(selector).length;
+                                knownObjId = $(currElem.pointToSelector).length;
+
+                                if (opacity < 1 && tourJson.tooltips[tooltipNo - 1] && tourJson.tooltips[tooltipNo - 1].fadeOutSelector2
+                                    && tourJson.tooltips[tooltipNo - 1].fadeOutSelector != tourJson.tooltips[tooltipNo].fadeOutSelector) {
+                                    // if previous tooltip had fadedOutSelector2 (grouped-container) unfade those objects
+                                    $(tourJson.tooltips[tooltipNo - 1].fadeOutSelector2).css('opacity', 1)
+                                }
 
                                 if (knownObjId == 0) {
                                     // target object does not exist, place object in the middle
@@ -342,18 +433,32 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                                     }
 
                                 } else {
-
-                                    // target object exists ... fade the other objects
-                                    if (opacity < 1 && fadeSelector && !tooltipJson.highlight) {
-                                        $(fadeSelector)
-                                            .fadeTo('fast', 1, () => { });
-                                        $('.cell').not(fadeSelector)
+                                    // fade the other objects
+                                    if (opacity < 1) {
+                                        $(currElem.fadeOutSelector)
                                             .fadeTo('fast', opacity, () => { })
                                             .addClass('gtour-faded');
                                     }
+                                    // unfade the target object
+                                    if (opacity < 1 && currElem.highlightSelector) {
+                                        $(currElem.highlightSelector)
+                                            .fadeTo('fast', 1, () => { });
+                                    }
+                                    // fade the other objects (2)
+                                    if (opacity < 1 && currElem.fadeOutSelector2) {
+                                        $(currElem.fadeOutSelector2)
+                                            .fadeTo('fast', opacity, () => { })
+                                            .addClass('gtour-faded');
+                                    }
+                                    // unfade the target object (2)
+                                    if (opacity < 1 && currElem.highlightSelector2) {
+                                        $(currElem.highlightSelector2)
+                                            .fadeTo('fast', 1, () => { });
+                                    }
 
-                                    if (tooltipJson.highlight && tooltipJson.highlightattr && tooltipJson.highlightvalue) { //(!fadeSelector) {
-                                        $(tooltipJson.otherSelector || selector)
+                                    if (tooltipJson.highlight && tooltipJson.otherSelector
+                                        && tooltipJson.highlightattr && tooltipJson.highlightvalue) {
+                                        $(tooltipJson.otherSelector)
                                             .css(tooltipJson.highlightattr, tooltipJson.highlightvalue)
                                             .addClass('gtour-highlighted');
                                     }
@@ -373,21 +478,21 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                                 // add the tooltip div
 
                                 $(rootContainer).append(`
-                            <div class="lui-tooltip  gtour-toolip-parent" id="${ownId}_tooltip" tooltip-no="${tooltipNo + 1}" 
-                                style="${tooltipStyle};display:none;position:absolute;">
-                                <!--${selector}-->
-                                <span style="opacity:0.6;">${tooltipNo + 1}/${tourJson.tooltips.length}</span>
-                                <span class="lui-icon  lui-icon--close" style="float:right;cursor:pointer;${tourJson.mode == 'hover' ? 'opacity:0;' : ''}" id="${ownId}_quit"></span>
-                                ${knownObjId == 0 ? '<br/><div class="gtour-err">Object <strong>' + qObjId + '</strong> not found!</div>' : '<br/>'}
-                                ${knownObjId > 1 ? '<br/><div class="gtour-err"><strong>' + qObjId + '</strong> selects ' + knownObjId + ' objects!</div>' : '<br/>'}
-                                <div id="${ownId}_text" class="gtour-text" style="font-size:${tourJson.fontsize}">
-                                    ${vizId ? '<!--placeholder for chart-->' : html}
-                                </div>
-                                <a class="lui-button  gtour-next" 
-                                  style="${tourJson.mode == 'hover' ? 'opacity:0;' : ''}border-color:${tourJson.bordercolor};${tooltipJson.hideNextButton ? 'display:none;' : ''}" 
-                                  id="${ownId}_next">${isLast ? tourJson.btnLabelDone : tourJson.btnLabelNext}</a>
-                                <div class="lui-tooltip__arrow"></div>
-                            </div>`);
+                                <div class="lui-tooltip  gtour-toolip-parent" id="${ownId}_tooltip" tooltip-no="${tooltipNo + 1}" 
+                                    style="${tooltipStyle};display:none;position:absolute;">
+                                    <!--${currElem.pointToSelector}-->
+                                    <span style="opacity:0.6;">${tooltipNo + 1}/${tourJson.tooltips.length}</span>
+                                    <span class="lui-icon  lui-icon--close" id="${ownId}_quit" style="float:right;cursor:pointer;display:${tooltipJson.noClose ? 'none' : 'block'};${tourJson.mode == 'hover' ? 'opacity:0;' : ''}"></span>
+                                    ${knownObjId == 0 ? '<br/><div class="gtour-err">Object <strong>' + qObjId + '</strong> not found!</div>' : '<br/>'}
+                                    ${knownObjId > 1 ? '<br/><div class="gtour-err"><strong>' + qObjId + '</strong> selects ' + knownObjId + ' objects!</div>' : '<br/>'}
+                                    <div id="${ownId}_text" class="gtour-text" style="font-size:${tourJson.fontsize}">
+                                        ${vizId ? '<!--placeholder for chart-->' : html}
+                                    </div>
+                                    <a class="lui-button  gtour-next" 
+                                    style="${tourJson.mode == 'hover' ? 'opacity:0;' : ''}border-color:${tourJson.bordercolor};${tooltipJson.hideNextButton ? 'display:none;' : ''}" 
+                                    id="${ownId}_next">${isLast ? tourJson.btnLabelDone : tourJson.btnLabelNext}</a>
+                                    <div class="lui-tooltip__arrow"></div>
+                                </div>`);
 
                                 // replace <pre> tags with <span> and put included text as html
                                 // Background: Quill text editor has the option to add a code block and this is put inside <pre> </pre> tags.
@@ -429,28 +534,32 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                                     // if an on-close action is set, now it's the time to execute it
                                     if (!previewMode && licensed && tooltipJson.action1_use && tooltipJson.action1_timing == 'after') {
                                         doAction(tooltipJson.action1_type, tooltipJson.action1_field, tooltipJson.action1_var
-                                            , tooltipJson.action1_value, tooltipJson.action1_sheet, selector)
+                                            , tooltipJson.action1_value, tooltipJson.action1_sheet, currElem.pointToSelector)
                                     }
                                     if (!previewMode && licensed && tooltipJson.action2_use && tooltipJson.action2_timing == 'after') {
                                         doAction(tooltipJson.action2_type, tooltipJson.action2_field, tooltipJson.action2_var
-                                            , tooltipJson.action2_value, tooltipJson.action2_sheet, selector)
+                                            , tooltipJson.action2_value, tooltipJson.action2_sheet, currElem.pointToSelector)
                                     }
                                     if (!previewMode && licensed && tooltipJson.action3_use && tooltipJson.action3_timing == 'after') {
                                         doAction(tooltipJson.action3_type, tooltipJson.action3_field, tooltipJson.action3_var
-                                            , tooltipJson.action3_value, tooltipJson.action3_sheet, selector)
+                                            , tooltipJson.action3_value, tooltipJson.action3_sheet, currElem.pointToSelector)
                                     }
                                     removeHighlighting(tooltipJson);
                                     if (nextElem && nextElem.delaybefore) removeFading();
+
                                     play(gtourGlobal, ownId, layout, tooltipNo + 1, isLast, enigma, currSheet, lStorageKey, lStorageVal, previewMode)
 
                                 });
 
-                                const calcPositions = findPositions(selector, rootContainer, `#${ownId}_tooltip`, arrowHeadSize, bgColor, orientation);
+                                const calcPositions = findPositions(currElem.pointToSelector, rootContainer, `#${ownId}_tooltip`, arrowHeadSize, bgColor, orientation);
 
                                 $(`#${ownId}_tooltip`)
                                     .css('left', calcPositions.left).css('right', calcPositions.right)  // left or right
                                     .css('top', calcPositions.top).css('bottom', calcPositions.bottom)  // top or bottom
                                     .attr('orient', calcPositions.orient);
+                                // remove possible previous arrow-heads
+                                $(`#${ownId}_tooltip .gtour-arrowhead`).remove();
+                                // render new arrow-head
                                 if (calcPositions.arrow) $(`#${ownId}_tooltip .lui-tooltip__arrow`).after(calcPositions.arrow);  // arrowhead
 
                                 // setTimeout(function () {
@@ -465,11 +574,11 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                     }
 
                     if (knownObjId) {   // hmm, knownObjId is undefined at this point. test scrollintoview
-                        if (!isScrolledIntoView(selector)) {
-                            document.querySelector(selector).scrollIntoView({ behavior: "smooth" }); // scroll to the element
+                        if (!isScrolledIntoView(currElem.pointToSelector)) {
+                            document.querySelector(currElem.pointToSelector).scrollIntoView({ behavior: "smooth" }); // scroll to the element
                             var interval;
                             interval = setInterval(function () {
-                                if (isScrolledIntoView(selector)) {
+                                if (isScrolledIntoView(currElem.pointToSelector)) {
                                     clearInterval(interval);
                                     renderTooltip();
                                 }
@@ -485,7 +594,7 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
         }
     }
 
-
+    // ---------------------------------------------------------------------------------------------------
     function doAction(actionType, field, variable, value, sheet, selector) {
 
         const app = qlik.currApp();
@@ -500,6 +609,11 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
             } else if (actionType == 'clear') {
                 // https://help.qlik.com/en-US/sense-developer/February2022/Subsystems/APIs/Content/Sense_ClientAPIs/CapabilityAPIs/FieldAPI/clear-method.htm
                 app.field(field).clear();
+                return true
+
+            } else if (actionType == 'clear-all') {
+                // https://help.qlik.com/en-US/sense-developer/February2022/Subsystems/APIs/Content/Sense_ClientAPIs/CapabilityAPIs/FieldAPI/clear-method.htm
+                app.clearAll();
                 return true
 
             } else if (actionType == 'variable') {
@@ -530,9 +644,7 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
         }
     }
 
-
-
-
+    // ---------------------------------------------------------------------------------------------------
     function waitForElement(selector, delay = 50, tries = 20) {
 
         // function resolves as a Promise when the DOM element "selector" is present.
@@ -574,6 +686,7 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
         }
     }
 
+    /*
     async function resolveDollarBrackets(v, enigma) {
 
         var needle = 0;
@@ -608,19 +721,74 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
         //console.log('done', v);
         return v;
     }
+    */
+    // ---------------------------------------------------------------------------------------------------
+    async function resolveQlikFormulas(tourJson) {
+
+        // if in some specific keys of tourJson a Qlik Formula starting with $( ... ) is found, 
+        // evaluate those so they get resolved before merging the result with the rest of tourJson again.
+
+        const app = qlik.currApp();
+        const enigma = app.model.enigmaModel;
+
+        // below fields are calculated as qlik formula, if their content starts with an "="
+        const resolveTourFields = [
+            'btnLabelNext', 'btnLabelDone', 'fieldWithText'
+        ];
+        const resolveTooltipFields = [
+            'action1_value', 'action2_value', 'action3_value',
+            'action1_field', 'action2_field', 'action3_field'
+        ];
+        //var resolvedTourJson = { tooltips: [] };
+        var resolvedTourJson = JSON.parse(JSON.stringify(tourJson));
+
+        for (const tourField of resolveTourFields) {
+            if (tourJson[tourField].substr(0, 1) == '=') {
+                resolvedTourJson[tourField] = await enigma.evaluate(tourJson[tourField]);
+            }
+        }
+
+        //resolvedTourJson.tooltips.forEach(async function (tooltip) {
+        for (var tooltip of resolvedTourJson.tooltips) {
+            if (tooltip.html.indexOf('$(') > -1) {
+                const evalThis = "='" + tooltip.html
+                    .replace(/\'/g, "'&Chr(39)&'")
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>')
+                    + "'"
+                const newHtml = await enigma.evaluate(evalThis);
+                //await resolveDollarBrackets(tooltip.html, enigma);
+                //console.warn(newHtml);
+                tooltip.html = newHtml;
+            }
+
+            for (const tooltipField of resolveTooltipFields) {
+                if (tooltip[tooltipField].substr(0, 1) == '=') {
+                    tooltip[tooltipField] = await enigma.evaluate(tourJson[tourField]);
+                }
+            }
+        }
+        return resolvedTourJson;
+    }
+
+    // ---------------------------------------------------------------------------------------------------
+    function removeHighlighting(tooltipJson) {
+        // gets all DOM elements with class gtour-highlighted, if there was an attribute
+        // set it will be removed, and the class itself will also be removed
+
+        if (tooltipJson && tooltipJson.highlightattr) {
+            $('.gtour-highlighted').css(tooltipJson.highlightattr, '');
+        }
+        $('.gtour-highlighted').removeClass('gtour-highlighted');
+    }
+
+    // ---------------------------------------------------------------------------------------------------
+    function removeFading() {
+        $('.gtour-faded').fadeTo('fast', 1, () => { }).removeClass('gtour-faded');
+    }
+
 })
 
 
-function removeHighlighting(tooltipJson) {
-    // gets all DOM elements with class gtour-highlighted, if there was an attribute
-    // set it will be removed, and the class itself will also be removed
 
-    if (tooltipJson && tooltipJson.highlightattr) {
-        $('.gtour-highlighted').css(tooltipJson.highlightattr, '');
-    }
-    $('.gtour-highlighted').removeClass('gtour-highlighted');
-}
 
-function removeFading() {
-    $('.gtour-faded').fadeTo('fast', 1, () => { }).removeClass('gtour-faded');
-}
