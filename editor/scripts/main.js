@@ -212,10 +212,19 @@ define([
         $('#tab-' + newid + '-accordion').append(tooltipPropsHTML.replace(/{{newid}}/g, newid));
 
         $('#gtour-picker-' + newid).click(function () {
-            window.top.postMessage({
-                msg: 'startPicker',
-                // activeTab: newid
-            }, origin);
+            if ($('#gtour-picker-' + newid).hasClass('picker-active')) {
+                $('#gtour-picker-' + newid).removeClass('picker-active');
+                window.top.postMessage({
+                    msg: 'quitPicker',
+                    // activeTab: newid
+                }, origin);
+            } else {
+                $('#gtour-picker-' + newid).addClass('picker-active');
+                window.top.postMessage({
+                    msg: 'startPicker',
+                    // activeTab: newid
+                }, origin);
+            }
         });
 
         $('#tab-' + newid + '-accordion .action_types').append(`

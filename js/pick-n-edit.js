@@ -134,6 +134,10 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint", "text!../editor-div
 
                         $('#' + ownId + '_quit').click(); // if a tooltip is open, close it
                         pick(arg); //, event.data.activeTab);
+
+                    } else if (event.data.msg == 'quitPicker') {
+                        $('.gtour-picker').remove();
+
                     }
 
                 }

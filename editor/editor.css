@@ -523,3 +523,8 @@ a.ui-button:active,
 .gtour-disable {
   opacity: 0.1;
 }
+
+.picker-active {
+  background-color:#079B4A !important;
+  color: white !important;
+}
