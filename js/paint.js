@@ -186,8 +186,8 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                     // if there is an autoLaunchCondition, calculate if it is true
                     if (gtourGlobal.cache[ownId].autoLaunchCond) {
                         const autoLaunchCond = await enigma.evaluate(gtourGlobal.cache[ownId].autoLaunchCond);
-                        launch = autoLaunchCond != '0' && !autoLaunchCond == "False";
-                        log(layout, 'auto-always launch condition is ' + autoLaunchCond);
+                        launch = ['0', 0, 'false', 'False'].indexOf(autoLaunchCond) == -1;
+                        log(layout, `auto-always launch condition is ${autoLaunchCond} (${launch})`);
                     }
                     if (launch) {
                         gtourGlobal.visitedTours[ownId] = true;  // remember for this session, that the tour has been started once
@@ -215,8 +215,8 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                     var launch = true;
                     if (gtourGlobal.cache[ownId].autoLaunchCond) {
                         const autoLaunchCond = await enigma.evaluate(gtourGlobal.cache[ownId].autoLaunchCond);
-                        launch = autoLaunchCond != '0';
-                        log(layout, 'auto-once launch condition is ' + launch);
+                        launch = ['0', 0, 'false', 'False'].indexOf(autoLaunchCond) == -1;
+                        log(layout, `auto-once launch condition is ${autoLaunch} (${launch})`);
                     }
                     if (launch) {
                         var launchedBefore = !(serverTime >= gtourGlobal.cache[ownId].relaunchAfter

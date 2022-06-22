@@ -10,7 +10,7 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
         },
 
         // ---------------------------------------------------------------------------------------------------
-        resolveQlikCalcs: async function (tourJson) {
+        resolveQlikFormulas: async function (tourJson) {
 
             // if in some specific keys of tourJson a Qlik Formula starting with $( ... ) is found, 
             // evaluate those so they get resolved before merging the result with the rest of tourJson again.

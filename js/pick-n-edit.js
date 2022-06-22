@@ -105,7 +105,7 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint", "text!../editor-div
                             licensedObjs: JSON.parse(`{"${ownId}":true}`),
                             activeTooltip: JSON.parse(`{"${currSheet}":{"${ownId}":-2}}`)
                         };
-                        mimikGlobal.cache[ownId] = await tooltip.resolveQlikCalcs(mimikGlobal.cache[ownId]);
+                        mimikGlobal.cache[ownId] = await tooltip.resolveQlikFormulas(mimikGlobal.cache[ownId]);
                         mimikGlobal.cache[ownId].mode = 'click'; // simple sequential mode
                         mimikGlobal.cache[ownId].opacity = 1;  // no fading of other objects
 
@@ -206,7 +206,7 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint", "text!../editor-div
                     //     licensedObjs: JSON.parse(`{"${ownId}":true}`),
                     //     activeTooltip: JSON.parse(`{"${currSheet}":{"${ownId}":-2}}`)
                     // };
-                    // mimikGlobal.cache[ownId] = await tooltip.resolveQlikCalcs(mimikGlobal.cache[ownId]);
+                    // mimikGlobal.cache[ownId] = await tooltip.resolveQlikFormulas(mimikGlobal.cache[ownId]);
                     // mimikGlobal.cache[ownId].mode = 'click'; // simple sequential mode
 
                     // if (activeTab != 1) {

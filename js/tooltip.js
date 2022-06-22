@@ -7,58 +7,14 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
         // ---------------------------------------------------------------------------------------------------
         play: function (gtourGlobal, ownId, layout, tooltipNo, reset, enigma, currSheet, lStorageKey, lStorageVal, previewMode) {
             play(gtourGlobal, ownId, layout, tooltipNo, reset, enigma, currSheet, lStorageKey, lStorageVal, previewMode)
-        }
+        },
 
-        /*
         // ---------------------------------------------------------------------------------------------------
-        resolveQlikCalcs: async function (tourJson) {
-
-            // if in some specific keys of tourJson a Qlik Formula starting with $( ... ) is found, 
-            // evaluate those so they get resolved before merging the result with the rest of tourJson again.
-
-            const app = qlik.currApp();
-            const enigma = app.model.enigmaModel;
-
-            // below fields are calculated as qlik formula, if their content starts with an "="
-            const resolveTourFields = [
-                'btnLabelNext', 'btnLabelDone', 'fieldWithText'
-            ];
-            const resolveTooltipFields = [
-                'action1_value', 'action2_value', 'action3_value',
-                'action1_field', 'action2_field', 'action3_field'
-            ];
-            //var resolvedTourJson = { tooltips: [] };
-            var resolvedTourJson = JSON.parse(JSON.stringify(tourJson));
-
-            for (const tourField of resolveTourFields) {
-                if (tourJson[tourField].substr(0, 1) == '=') {
-                    resolvedTourJson[tourField] = await enigma.evaluate(tourJson[tourField]);
-                }
-            }
-
-            //resolvedTourJson.tooltips.forEach(async function (tooltip) {
-            for (var tooltip of resolvedTourJson.tooltips) {
-                if (tooltip.html.indexOf('$(') > -1) {
-                    const evalThis = "='" + tooltip.html
-                        .replace(/\'/g, "'&Chr(39)&'")
-                        .replace(/&lt;/g, '<')
-                        .replace(/&gt;/g, '>')
-                        + "'"
-                    const newHtml = await enigma.evaluate(evalThis);
-                    //await resolveDollarBrackets(tooltip.html, enigma);
-                    //console.warn(newHtml);
-                    tooltip.html = newHtml;
-                }
-
-                for (const tooltipField of resolveTooltipFields) {
-                    if (tooltip[tooltipField].substr(0, 1) == '=') {
-                        tooltip[tooltipField] = await enigma.evaluate(tourJson[tourField]);
-                    }
-                }
-            }
-            return resolvedTourJson;
+        resolveQlikFormulas: async function (tourJson) {
+            const ret = await resolveQlikFormulas(tourJson);
+            return ret;
         }
-        */
+
     }
 
     // ---------------------------------------------------------------------------------------------------
