@@ -7,8 +7,8 @@ History:
 
 */
 
-define(["jquery", "../editor/scripts/leonardo-msg"], function
-    ($, leonardo) {
+define(["qlik", "jquery", "../editor/scripts/leonardo-msg"], function
+    (qlik, $, leonardo) {
 
     const tourDefault = {
         "mode": "click",
@@ -163,6 +163,8 @@ define(["jquery", "../editor/scripts/leonardo-msg"], function
 
         //--------------------------------------------------------------------------------
         loadTour: async function (gtourGlobal, tourName, providerId, appId, skipBypassedTTs = false, log = true) {
+            const app = qlik.currApp();
+            const enigma = app.model.enigmaModel;
             //----------------------------------------------------------------------------
             if (log) console.log('calling loadTour "' + tourName + '"');
             const mode = location.href.indexOf('qlikcloud.com') > -1 ? 'cloud' : 'windows';
@@ -194,6 +196,39 @@ define(["jquery", "../editor/scripts/leonardo-msg"], function
                     const raw = await restCall('GET', apiUrls["3"], undefined, log);
                     tourJson = raw ? JSON.parse(raw.split(smallestGIF)[1]) : {}
 
+                } else if (providerId == 4) {
+                    console.log('provider 4');
+                    tourJson = await enigma.evaluate(`=$(='Only({1<%tourName={"${tourName}"}>}' &
+                    Concat({1<$Table={"$tours"},$Field-={"%*"}>}
+                    CHR(39) & '"' & Mid($Field,6) & '":' & CHR(39) & ' & '
+                    & 'if(IsNull([' & $Field & ']),''null'',if(NOT isNum([' & $Field & ']),' & CHR(39) & '"' & CHR(39) & '))'
+                    & ' & Text([' & $Field & ']) & ' 
+                    & 'if(NOT IsNull([' & $Field & ']),if(NOT isNum([' & $Field & ']),' & CHR(39) & '"' & CHR(39) & '))'
+                    , ' & '', '' & ', $FieldNo)
+                    & ')')`);
+                    try {
+                        tourJson = JSON.parse('{' + tourJson + ', "tooltips":[]}');
+                    }
+                    catch (err) {
+                        leonardo.msg('loadTour', 'Error',
+                            'Function loadTour: error parsing JSON from data model: ' + tourJson, null, 'OK');
+                        return false;
+                    }
+                    const tooltipsCount = await enigma.evaluate(`Count({1<%tourName={"${tourName}"}>} %tooltipId)`);
+                    for (var t = 0; t < parseInt(tooltipsCount); t++) {
+                        var tooltipJson = await enigma.evaluate(`=$(='Only({<%tourName={"${tourName}"},%tooltipId={${t}}>}' &
+                        Concat({<$Table={"$tooltips"},$Field-={"%*"}>}
+                        CHR(39) & '"' & Mid($Field,9) & '":' & CHR(39) & ' & '
+                        & 'if(IsNull([' & $Field & ']),''null'',if(NOT isNum([' & $Field & ']),' & CHR(39) & '"' & CHR(39) & '))'
+                        & ' & Text([' & $Field & ']) & ' 
+                        & 'if(NOT IsNull([' & $Field & ']),if(NOT isNum([' & $Field & ']),' & CHR(39) & '"' & CHR(39) & '))'
+                        , ' & '', '' & ', $FieldNo)
+                        & ')')`);
+                        tooltipJson = JSON.parse('{' + tooltipJson + '}');
+                        tourJson.tooltips.push(tooltipJson);
+                    }
+                    console.log(tourJson);
+
                 } else {
 
                     leonardo.msg('loadTour', 'Error', 'Function loadTour: unknown providerId ' + providerId, null, 'OK');
@@ -214,6 +249,8 @@ define(["jquery", "../editor/scripts/leonardo-msg"], function
         //--------------------------------------------------------------------------------
         listTours: async function (gtourGlobal, providerId, appId, log = true) {
             //----------------------------------------------------------------------------
+            const app = qlik.currApp();
+            const enigma = app.model.enigmaModel;
             if (log) console.log('calling listTours');
 
             const mode = location.href.indexOf('qlikcloud.com') > -1 ? 'cloud' : 'windows';
@@ -269,6 +306,11 @@ define(["jquery", "../editor/scripts/leonardo-msg"], function
                 });
                 fileList.sort();
                 return fileList;
+
+            } else if (providerId == 4) {
+
+                var tours = await enigma.evaluate(`'[' & Concat({1} DISTINCT '"' & %tourName & '"', ',') & ']'`);
+                return JSON.parse(tours);
 
             } else {
 

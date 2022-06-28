@@ -183,6 +183,8 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license", "./pick
                             } else {
                                 opt.push({ value: "1", label: ".txt Attachment (Qlik Sense Windows)" });
                             }
+                            opt.push({ value: "4", label: "From data model (read-only)" });
+
                             // opt.push({ value: "9", label: "External (not available)" })
                             return opt
                         }

@@ -13,6 +13,7 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
         licensedObjs: {}, // list of all extension-ids which have a license
         //tooltipsCache: {}, // the qHypercube result of each tour will be put here under the key of the objectId when started 
         cache: {}, // the qHypercube result of each tour will be put here under the key of the objectId when started 
+        formulas: {},  // structure like in cache, but only such object keys which need to be calculated in runtime 
         noLicenseWarning: {}, // in order not to suppress repeating license warnings, every extension id is added here once the warning was shown
         isOEMed: null,
         isQlikCloud: location.href.indexOf('.qlikcloud.com/') > -1,
@@ -133,8 +134,13 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
 
             } else {
 
-                const tourJson = await store.loadTour(gtourGlobal, layout.pTourName, layout.pStorageProvider, app.id, true, layout.pConsoleLog);
-                gtourGlobal.cache[ownId] = await tooltip.resolveQlikFormulas(tourJson);
+                const tourJson = await store.loadTour(gtourGlobal, layout.pTourName, layout.pStorageProvider,
+                    app.id, true, layout.pConsoleLog);
+                gtourGlobal.formulas[ownId] = tooltip.getKeysWithFormulas(tourJson);
+                //gtourGlobal.cache[ownId] = await tooltip.resolveQlikFormulas(tourJson);
+                gtourGlobal.cache[ownId] = tourJson;
+                await tooltip.resolveQlikFormulas(tourJson, gtourGlobal.formulas[ownId]);
+
                 // gtourGlobal.cache[ownId] = tourJson;
 
                 paint.paint(layout, gtourGlobal.cache[ownId], gtourGlobal);

@@ -1,7 +1,8 @@
 // props.js: Extension properties (accordeon menu) externalized
 
-define(["qlik", "jquery", "./tooltip", "./store", "./paint", "text!../editor-div.html"], function
-    (qlik, $, tooltip, store, paint, htmlEditor) {
+define(["qlik", "jquery", "./tooltip", "./store", "./paint",
+    "../editor/scripts/leonardo-msg", "text!../editor-div.html"], function
+    (qlik, $, tooltip, store, paint, leonardo, htmlEditor) {
 
     // const storageProvider = 1; // 1.. Qlik Sense for Windows, app-attached content
 
@@ -105,7 +106,7 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint", "text!../editor-div
                             licensedObjs: JSON.parse(`{"${ownId}":true}`),
                             activeTooltip: JSON.parse(`{"${currSheet}":{"${ownId}":-2}}`)
                         };
-                        mimikGlobal.cache[ownId] = await tooltip.resolveQlikFormulas(mimikGlobal.cache[ownId]);
+                        //mimikGlobal.cache[ownId] = await tooltip.resolveQlikFormulas(mimikGlobal.cache[ownId]);
                         mimikGlobal.cache[ownId].mode = 'click'; // simple sequential mode
                         mimikGlobal.cache[ownId].opacity = 1;  // no fading of other objects
 
@@ -137,6 +138,55 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint", "text!../editor-div
 
                     } else if (event.data.msg == 'quitPicker') {
                         $('.gtour-picker').remove();
+
+                    } else if (event.data.msg == 'showAsTable') {
+                        console.log(event.data.tourJson);
+
+                        const qlikify = function (value, key) {
+
+                            if (typeof value == 'boolean') {
+                                return `Dual('${value}',${value ? 0 : 1}) AS [${key}]`;
+                            } else if (value == null || (typeof value == 'number' && isNaN(value))) {
+                                return `null() AS [${key}]`;
+                            } else if (typeof value == 'number') {
+                                return `${value} AS [${key}]`;
+                            } else if (typeof value == 'string') {
+                                return `'${value.split("$(").join("$'&'(")}' AS [${key}]`;
+                            } else {
+                                return `// ${value} AS [${key}]`
+                            }
+                        }
+
+                        var text = ["[$tours]:", "LOAD", `  '${arg.pTourName}' AS %tourName`];
+
+                        for (const key in event.data.tourJson) {
+                            if (key != 'tooltips') {
+                                text.push('  ,' + qlikify(event.data.tourJson[key], 'tour.' + key));
+                            }
+                        }
+                        text.push('AUTOGENERATE(1);');
+                        text.push('');
+                        text.push('[$tooltips]:');
+                        var tooltipId = 0;
+                        for (const tooltip of event.data.tourJson.tooltips) {
+                            text.push(tooltipId > 0 ? 'CONCATENATE LOAD' : 'LOAD');
+                            text.push(`  '${arg.pTourName}' AS %tourName`);
+                            text.push(`  ,${tooltipId} AS %tooltipId`);
+                            for (const key2 in tooltip) {
+                                text.push('  ,' + qlikify(tooltip[key2], 'tooltip.' + key2));
+                            }
+                            text.push('AUTOGENERATE(1);');
+                            text.push('');
+                            tooltipId++;
+                        }
+                        console.log(text.join('\n'));
+
+                        leonardo.msg(
+                            ownId,
+                            'Copy this load script',
+                            '<textarea style="width:98%;height:400px;border-width:0;">' + text.join('\n') + '</textarea>',
+                            null, 'OK'
+                        );
 
                     }
 
@@ -234,6 +284,14 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint", "text!../editor-div
                     //     })
                     // })
                 });
+
+                $('#gtour-as-table').click(async function () {
+                    document.getElementById('gtour-editor-iframe').contentWindow.postMessage({
+                        msg: 'getTourJson',
+                        nextMsg: 'showAsTable'
+                    }, origin);
+
+                })
             }
 
             // Disable clicks in Qlik Sense Worksheet:

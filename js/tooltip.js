@@ -2,6 +2,17 @@
 
 define(["qlik", "jquery", "./license"], function (qlik, $, license) {
 
+    // below fields are calculated as qlik formula, if their content starts with an "="
+    // from tour object
+    const resolveTourFields = [
+        'btnLabelNext', 'btnLabelDone', 'fieldWithText'
+    ];
+    // from tooltip subobject within tour
+    const resolveTooltipFields = [
+        'action1_value', 'action2_value', 'action3_value',
+        'action1_field', 'action2_field', 'action3_field'
+    ];
+
     return {
 
         // ---------------------------------------------------------------------------------------------------
@@ -10,9 +21,38 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
         },
 
         // ---------------------------------------------------------------------------------------------------
-        resolveQlikFormulas: async function (tourJson) {
-            const ret = await resolveQlikFormulas(tourJson);
+        resolveQlikFormulas: async function (tourJson, formulas, tooltipNo) {
+            const ret = await resolveQlikFormulas(tourJson, formulas, tooltipNo);
             return ret;
+        },
+
+        getKeysWithFormulas: function (tourJson) {
+
+            // returns an object that has the same structure as tourJson but contains only
+            // such keys, that represent a qlik formula, not a constant
+
+            var copyJson = { tooltips: [] };
+
+            for (const tourField of resolveTourFields) {
+                //for (const tourField in tourJson) {
+                if ((`${tourJson[tourField]}`).substr(0, 1) == '=') {
+                    copyJson[tourField] = tourJson[tourField];
+                }
+            }
+
+            for (var tooltip of tourJson.tooltips) {
+                copyJson.tooltips.push({});
+                if (tooltip.html.indexOf('$(') > -1) {
+                    copyJson.tooltips[copyJson.tooltips.length - 1]["html"] = tooltip.html
+                }
+
+                for (const tooltipField of resolveTooltipFields) {
+                    if (tooltip[tooltipField].substr(0, 1) == '=') {
+                        copyJson.tooltips[copyJson.tooltips.length - 1][tooltipField] = tooltip[tooltipField];
+                    }
+                }
+            }
+            return copyJson;
         }
 
     }
@@ -22,7 +62,8 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
         , lStorageKey, lStorageVal, previewMode = false) {
 
 
-        const tourJson = await resolveQlikFormulas(gtourGlobal.cache[ownId]);
+        var tourJson = gtourGlobal.cache[ownId];
+        await resolveQlikFormulas(tourJson, gtourGlobal.formulas[ownId], tooltipNo);
         const tooltipJson = tourJson.tooltips[tooltipNo];
         const arrowHeadSize = tourJson.arrowHead || 16;
         const rootContainer = gtourGlobal.isSingleMode ? '#qv-stage-container' : '#qv-page-container';
@@ -210,7 +251,7 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
                                         ${vizId ? '<!--placeholder for chart-->' : html}
                                     </div>
                                     <a class="lui-button  gtour-next" 
-                                    style="${tourJson.mode == 'hover' ? 'opacity:0;' : ''}border-color:${tourJson.bordercolor};${tooltipJson.hideNextButton ? 'display:none;' : ''}" 
+                                    style="${tourJson.mode == 'hover' ? 'opacity:0;' : ''}border-color:${tourJson.bordercolor};${(tooltipJson.hideNextButton && knownObjId > 0) ? 'display:none;' : ''}" 
                                     id="${ownId}_next">${isLast ? tourJson.btnLabelDone : tourJson.btnLabelNext}</a>
                                     <div class="lui-tooltip__arrow"></div>
                                 </div>`);
@@ -679,52 +720,43 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
     }
     */
     // ---------------------------------------------------------------------------------------------------
-    async function resolveQlikFormulas(tourJson) {
+    async function resolveQlikFormulas(tourJson, formulas, tooltipNo) {
 
-        // if in some specific keys of tourJson a Qlik Formula starting with $( ... ) is found, 
-        // evaluate those so they get resolved before merging the result with the rest of tourJson again.
+        // if in some specific keys of tourJson a Qlik Formula is used (defined in the formulas object) 
+        // evaluate those so they get resolved, then set the result in tourJson.
+        // if no tooltipNo is given, all tooltip array elements are searched
+        // if tooltipNo is given, then the tourJson and only the specific element in tooltips array is evaluated
 
         const app = qlik.currApp();
         const enigma = app.model.enigmaModel;
 
-        // below fields are calculated as qlik formula, if their content starts with an "="
-        const resolveTourFields = [
-            'btnLabelNext', 'btnLabelDone', 'fieldWithText'
-        ];
-        const resolveTooltipFields = [
-            'action1_value', 'action2_value', 'action3_value',
-            'action1_field', 'action2_field', 'action3_field'
-        ];
-        //var resolvedTourJson = { tooltips: [] };
-        var resolvedTourJson = JSON.parse(JSON.stringify(tourJson));
-
-        for (const tourField of resolveTourFields) {
-            if (tourJson[tourField].substr(0, 1) == '=') {
-                resolvedTourJson[tourField] = await enigma.evaluate(tourJson[tourField]);
+        // resolve formulas in tour object
+        for (const tourField in formulas) {
+            if (tourField != 'tooltips') {
+                tourJson[tourField] = await enigma.evaluate(formulas[tourField]);
             }
         }
 
-        //resolvedTourJson.tooltips.forEach(async function (tooltip) {
-        for (var tooltip of resolvedTourJson.tooltips) {
-            if (tooltip.html.indexOf('$(') > -1) {
-                const evalThis = "='" + tooltip.html
-                    .replace(/\'/g, "'&Chr(39)&'")
-                    .replace(/&lt;/g, '<')
-                    .replace(/&gt;/g, '>')
-                    + "'"
-                const newHtml = await enigma.evaluate(evalThis);
-                //await resolveDollarBrackets(tooltip.html, enigma);
-                //console.warn(newHtml);
-                tooltip.html = newHtml;
-            }
+        const i_from = tooltipNo || 0;
+        const i_to = tooltipNo || (formulas.tooltips.length - 1);
 
-            for (const tooltipField of resolveTooltipFields) {
-                if (tooltip[tooltipField].substr(0, 1) == '=') {
-                    tooltip[tooltipField] = await enigma.evaluate(tourJson[tourField]);
+        // resolve fomulas in tooltips array
+        for (var i = i_from; i <= i_to; i++) {
+            for (const tooltipField in formulas.tooltips[i]) {
+                var evalThis
+                if (tooltipField == 'html') {
+                    evalThis = "='" + formulas.tooltips[i].html
+                        .replace(/\'/g, "'&Chr(39)&'")
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        + "'"
+                } else {
+                    evalThis = formulas.tooltips[i][tooltipField]
                 }
+                tourJson.tooltips[i][tooltipField] = await enigma.evaluate(evalThis);
             }
         }
-        return resolvedTourJson;
+        return true
     }
 
     // ---------------------------------------------------------------------------------------------------
