@@ -108,7 +108,6 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
                             licensedObjs: JSON.parse(`{"${ownId}":true}`),
                             activeTooltip: JSON.parse(`{"${currSheet}":{"${ownId}":-2}}`)
                         };
-                        //await tooltip.resolveQlikFormulas(mimikGlobal.cache[ownId], mimikGlobal.formulas[ownId]);
                         mimikGlobal.cache[ownId].mode = 'click'; // simple sequential mode
                         mimikGlobal.cache[ownId].opacity = 1;  // no fading of other objects
 
@@ -121,7 +120,7 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
                             }
                             mimikGlobal.cache[ownId].tooltips = [mimikGlobal.cache[ownId].tooltips[keepTooltipNo]];
                             mimikGlobal.formulas[ownId].tooltips = [mimikGlobal.formulas[ownId].tooltips[keepTooltipNo]];
-                            await tooltip.resolveQlikFormulas(mimikGlobal.cache[ownId], mimikGlobal.formulas[ownId]);
+                            mimikGlobal.cache[ownId] = await tooltip.resolveQlikFormulas2(mimikGlobal.formulas[ownId]);
                         }
 
                         if ((activeTab != 1 && selector) || activeTab == 1) {
@@ -263,6 +262,22 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
                         nextMsg: 'showAsTable'
                     }, origin);
 
+                    // const objDef = {
+                    //     qInfo: { qType: 'gtour' },
+                    //     def: { qStringExpression: '=OSUser()' },
+                    //     ghi: { qValueExpression: '=Pi()' },
+                    //     tooltip: [
+                    //         { a: 1, b: 2 },
+                    //         { a: 1, b: 2 }
+                    //     ],
+                    //     blabla: "yes"
+                    // };
+                    // enigma.createSessionObject(objDef).then(obj => {
+                    //     obj.getLayout().then(layout => {
+                    //         console.log('sessionobj', layout);
+                    //         enigma.destroySessionObject(layout.qInfo.qId)
+                    //     })
+                    // })
                 })
             }
 
@@ -345,6 +360,7 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
             event.stopPropagation();
         })
     }
+
     function enableQlikClick() {
         $('body.qv-client.qv-sheet-enabled.qv-view-sheet.qv-card').off('mousedown');
     }

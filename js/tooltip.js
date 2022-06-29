@@ -21,37 +21,51 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
         },
 
         // ---------------------------------------------------------------------------------------------------
-        resolveQlikFormulas: async function (tourJson, formulas, tooltipNo) {
-            const ret = await resolveQlikFormulas(tourJson, formulas, tooltipNo);
+        resolveQlikFormulas2: async function (formulas) {
+            const ret = await resolveQlikFormulas2(formulas);
             return ret;
         },
 
         getKeysWithFormulas: function (tourJson) {
 
-            // returns an object that has the same structure as tourJson but contains only
-            // such keys, that represent a qlik formula, not a constant
+            // returns an object that has the same structure as tourJson but puts anything 
+            // that contains a qlik formula into a {qStringExpression: '...'} subobject, so
+            // that qlik can evaluate it later
 
-            var copyJson = { tooltips: [] };
+            var copyJson = JSON.parse(JSON.stringify(tourJson));
 
-            for (const tourField of resolveTourFields) {
-                //for (const tourField in tourJson) {
-                if ((`${tourJson[tourField]}`).substr(0, 1) == '=') {
-                    copyJson[tourField] = tourJson[tourField];
-                }
-            }
-
-            for (var tooltip of tourJson.tooltips) {
-                copyJson.tooltips.push({});
-                if (tooltip.html && tooltip.html.indexOf('$(') > -1) {
-                    copyJson.tooltips[copyJson.tooltips.length - 1]["html"] = tooltip.html
-                }
-
-                for (const tooltipField of resolveTooltipFields) {
-                    if (tooltip[tooltipField].substr(0, 1) == '=') {
-                        copyJson.tooltips[copyJson.tooltips.length - 1][tooltipField] = tooltip[tooltipField];
+            for (const tourField in copyJson) {
+                if (tourField != 'tooltips') {
+                    if ((`${copyJson[tourField]}`).substr(0, 1) == '=') {
+                        copyJson[tourField] = { qStringExpression: copyJson[tourField] };
+                    }
+                } else {
+                    // crawl tooltips array
+                    for (const tooltip of copyJson.tooltips) {
+                        for (const tooltipField in tooltip) {
+                            if (tooltipField == 'html') {
+                                if (tooltip.html.indexOf('$(') > -1) {
+                                    tooltip.html = {
+                                        qStringExpression: "='" + tooltip.html
+                                            .replace(/\'/g, "'&Chr(39)&'")
+                                            .replace(/&lt;/g, '<')
+                                            .replace(/&gt;/g, '>')
+                                            + "'"
+                                    }
+                                }
+                            } else {
+                                if ((`${tooltip[tooltipField]}`).substr(0, 1) == '=') {
+                                    tooltip[tooltipField] = { qStringExpression: tooltip[tooltipField] };
+                                }
+                            }
+                        }
                     }
                 }
             }
+
+            // console.log('getKeysWithFormulas result');
+            // console.log(JSON.stringify(copyJson));
+
             return copyJson;
         }
 
@@ -62,8 +76,9 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
         , lStorageKey, lStorageVal, previewMode = false) {
 
 
-        var tourJson = gtourGlobal.cache[ownId];
-        await resolveQlikFormulas(tourJson, gtourGlobal.formulas[ownId], tooltipNo);
+        // var tourJson = gtourGlobal.cache[ownId];
+        // await resolveQlikFormulas(tourJson, gtourGlobal.formulas[ownId], tooltipNo);
+        var tourJson = await resolveQlikFormulas2(gtourGlobal.formulas[ownId]);
         const tooltipJson = tourJson.tooltips[tooltipNo];
         const arrowHeadSize = tourJson.arrowHead || 16;
         const rootContainer = gtourGlobal.isSingleMode ? '#qv-stage-container' : '#qv-page-container';
@@ -683,44 +698,8 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
         }
     }
 
-    /*
-    async function resolveDollarBrackets(v, enigma) {
-
-        var needle = 0;
-        //var parts = [];
-        while (v.indexOf('$(', needle) > -1) {
-            needle = v.indexOf('$(', needle);
-            //console.log('found at ', needle);
-            const start = needle + 2;
-            needle = needle + 2;
-            bracketLevel = 1;
-            do {
-                //console.log('inspecting ', v.substr(needle, 1), bracketLevel);
-                if (v.substr(needle, 1) == '(') bracketLevel++;
-                if (v.substr(needle, 1) == ')') bracketLevel--;
-                needle++;
-            } while (needle <= v.length && bracketLevel > 0)
-            const end = needle;
-            if (bracketLevel > 0) {
-                console.error('bracket level starting at ' + start + ' does not close');
-            } else {
-                //console.log('brackets close at ', end, v.substr(start, end - start - 1));
-                const replacement = await enigma.evaluate(
-                    v.substr(start, end - start - 1)
-                        .replace(/&lt;/g, '<')
-                        .replace(/&gt;/g, '>')
-                );
-                v = v.substr(0, start - 2) + replacement + v.substr(end);
-                needle = start + replacement.length - 3;
-            }
-            needle++;
-        }
-        //console.log('done', v);
-        return v;
-    }
-    */
     // ---------------------------------------------------------------------------------------------------
-    async function resolveQlikFormulas(tourJson, formulas, tooltipNo) {
+    async function resolveQlikFormulas2(formulas) {
 
         // if in some specific keys of tourJson a Qlik Formula is used (defined in the formulas object) 
         // evaluate those so they get resolved, then set the result in tourJson.
@@ -729,34 +708,18 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
 
         const app = qlik.currApp();
         const enigma = app.model.enigmaModel;
-
-        // resolve formulas in tour object
-        for (const tourField in formulas) {
-            if (tourField != 'tooltips') {
-                tourJson[tourField] = await enigma.evaluate(formulas[tourField]);
-            }
-        }
-
-        const i_from = tooltipNo || 0;
-        const i_to = tooltipNo || (formulas.tooltips.length - 1);
-
-        // resolve fomulas in tooltips array
-        for (var i = i_from; i <= i_to; i++) {
-            for (const tooltipField in formulas.tooltips[i]) {
-                var evalThis
-                if (tooltipField == 'html') {
-                    evalThis = "='" + formulas.tooltips[i].html
-                        .replace(/\'/g, "'&Chr(39)&'")
-                        .replace(/&lt;/g, '<')
-                        .replace(/&gt;/g, '>')
-                        + "'"
-                } else {
-                    evalThis = formulas.tooltips[i][tooltipField]
-                }
-                tourJson.tooltips[i][tooltipField] = await enigma.evaluate(evalThis);
-            }
-        }
-        return true
+        var objDef = JSON.parse(JSON.stringify(formulas));
+        objDef.qInfo = { qType: 'gtour' }; // add mandatory key qInfo
+        const obj = await enigma.createSessionObject(objDef);
+        var layout = await obj.getLayout();
+        enigma.destroySessionObject(layout.qInfo.qId);
+        var tourJson = JSON.parse(JSON.stringify(layout));
+        delete tourJson.qInfo
+        if (tourJson.qMeta) delete tourJson.qMeta;
+        if (tourJson.qSelectionInfo) delete tourJson.qSelectionInfo;
+        // console.log('resolveQlikFormulas');
+        // console.log(tourJson);
+        return tourJson
     }
 
     // ---------------------------------------------------------------------------------------------------

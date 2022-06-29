@@ -462,21 +462,21 @@ define([
                 break;
         }
 
-        if ($(key('lookupDataModel')).prop('checked')) {
-            $(key('fieldWithId')).closest(cl).removeClass(dis);
-            $(key('fieldWithText')).closest(cl).removeClass(dis);
-            $(key('languageAsRow')).closest(cl).removeClass(dis);
-            if ($(key('languageAsRow')).prop('checked')) {
-                $(key('fieldWithLanguage')).closest(cl).removeClass(dis);
-            } else {
-                $(key('fieldWithLanguage')).closest(cl).addClass(dis);
-            }
-        } else {
-            $(key('fieldWithId')).closest(cl).addClass(dis);
-            $(key('fieldWithText')).closest(cl).addClass(dis);
-            $(key('languageAsRow')).closest(cl).addClass(dis);
-            $(key('fieldWithLanguage')).closest(cl).addClass(dis);
-        }
+        // if ($(key('lookupDataModel')).prop('checked')) {
+        //     $(key('fieldWithId')).closest(cl).removeClass(dis);
+        //     $(key('fieldWithText')).closest(cl).removeClass(dis);
+        //     $(key('languageAsRow')).closest(cl).removeClass(dis);
+        //     if ($(key('languageAsRow')).prop('checked')) {
+        //         $(key('fieldWithLanguage')).closest(cl).removeClass(dis);
+        //     } else {
+        //         $(key('fieldWithLanguage')).closest(cl).addClass(dis);
+        //     }
+        // } else {
+        //     $(key('fieldWithId')).closest(cl).addClass(dis);
+        //     $(key('fieldWithText')).closest(cl).addClass(dis);
+        //     $(key('languageAsRow')).closest(cl).addClass(dis);
+        //     $(key('fieldWithLanguage')).closest(cl).addClass(dis);
+        // }
 
         // when highlight is checked unhide additional params
         if ($(key('highlight')).prop('checked')) {

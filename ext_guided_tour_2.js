@@ -137,9 +137,7 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
                 const tourJson = await store.loadTour(gtourGlobal, layout.pTourName, layout.pStorageProvider,
                     app.id, true, layout.pConsoleLog);
                 gtourGlobal.formulas[ownId] = tooltip.getKeysWithFormulas(tourJson);
-                //gtourGlobal.cache[ownId] = await tooltip.resolveQlikFormulas(tourJson);
-                gtourGlobal.cache[ownId] = tourJson;
-                await tooltip.resolveQlikFormulas(tourJson, gtourGlobal.formulas[ownId]);
+                gtourGlobal.cache[ownId] = await tooltip.resolveQlikFormulas2(gtourGlobal.formulas[ownId]);
 
                 // gtourGlobal.cache[ownId] = tourJson;
 
