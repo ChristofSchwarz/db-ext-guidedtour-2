@@ -42,7 +42,7 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
 
             for (var tooltip of tourJson.tooltips) {
                 copyJson.tooltips.push({});
-                if (tooltip.html.indexOf('$(') > -1) {
+                if (tooltip.html && tooltip.html.indexOf('$(') > -1) {
                     copyJson.tooltips[copyJson.tooltips.length - 1]["html"] = tooltip.html
                 }
 

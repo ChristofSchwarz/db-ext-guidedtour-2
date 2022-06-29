@@ -92,6 +92,7 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
 
 
                         const tourJson = event.data.tourJson;
+                        const currFormulas = tooltip.getKeysWithFormulas(tourJson)
                         const selector = event.data.selector;
                         const activeTab = event.data.activeTab;
 
@@ -99,23 +100,30 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
                         // const html = $editor('#tab-' + activeTab + '-accordion .ql-editor').html();
                         $('#' + ownId + '_tooltip').remove(); // if another tooltip is open, close it
 
-
+                        // build a partial copy of the gtourGlobal object with only the current tour.
                         var mimikGlobal = {
                             cache: JSON.parse(`{"${ownId}":${JSON.stringify(tourJson)}}`),
+                            formulas: JSON.parse(`{"${ownId}":${JSON.stringify(currFormulas)}}`),
                             isSingleMode: false,
                             licensedObjs: JSON.parse(`{"${ownId}":true}`),
                             activeTooltip: JSON.parse(`{"${currSheet}":{"${ownId}":-2}}`)
                         };
-                        //mimikGlobal.cache[ownId] = await tooltip.resolveQlikFormulas(mimikGlobal.cache[ownId]);
+                        //await tooltip.resolveQlikFormulas(mimikGlobal.cache[ownId], mimikGlobal.formulas[ownId]);
                         mimikGlobal.cache[ownId].mode = 'click'; // simple sequential mode
                         mimikGlobal.cache[ownId].opacity = 1;  // no fading of other objects
 
                         if (activeTab != 1) {
-                            // activeTab is not "Tour", play only one tooltip (not the entire series). Remove the rest from array
-                            mimikGlobal.cache[ownId].tooltips = mimikGlobal.cache[ownId].tooltips.filter(function (elem) {
-                                return elem.selector == selector
-                            });
+                            // activeTab is not "Tour", play only one tooltip (not the entire series). 
+                            // keep only the currently edited tooltip in mimikGlobal.cache[...].tooltips
+                            var keepTooltipNo;
+                            for (var i = 0; i < mimikGlobal.cache[ownId].tooltips.length; i++) {
+                                if (mimikGlobal.cache[ownId].tooltips[i].selector == selector) keepTooltipNo = i;
+                            }
+                            mimikGlobal.cache[ownId].tooltips = [mimikGlobal.cache[ownId].tooltips[keepTooltipNo]];
+                            mimikGlobal.formulas[ownId].tooltips = [mimikGlobal.formulas[ownId].tooltips[keepTooltipNo]];
+                            await tooltip.resolveQlikFormulas(mimikGlobal.cache[ownId], mimikGlobal.formulas[ownId]);
                         }
+
                         if ((activeTab != 1 && selector) || activeTab == 1) {
 
                             console.warn('preview play');
@@ -247,42 +255,6 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
                         nextMsg: 'previewTooltip'
                     }, origin);
 
-                    // const tourJson = store.createTourJson($('#gtour-editor-iframe').contents());
-
-                    // const selector = $editor('#tab-' + activeTab + '-accordion [key="selector"]').val();
-                    // // const html = $editor('#tab-' + activeTab + '-accordion .ql-editor').html();
-                    // $('#' + ownId + '_tooltip').remove(); // if another tooltip is open, close it
-
-
-                    // var mimikGlobal = {
-                    //     cache: JSON.parse(`{"${ownId}":${JSON.stringify(tourJson)}}`),
-                    //     isSingleMode: false,
-                    //     licensedObjs: JSON.parse(`{"${ownId}":true}`),
-                    //     activeTooltip: JSON.parse(`{"${currSheet}":{"${ownId}":-2}}`)
-                    // };
-                    // mimikGlobal.cache[ownId] = await tooltip.resolveQlikFormulas(mimikGlobal.cache[ownId]);
-                    // mimikGlobal.cache[ownId].mode = 'click'; // simple sequential mode
-
-                    // if (activeTab != 1) {
-                    //     // activeTab is not "Tour", play only one tooltip (not the entire series). Remove the rest from array
-                    //     mimikGlobal.cache[ownId].tooltips = mimikGlobal.cache[ownId].tooltips.filter(function (elem) {
-                    //         return elem.selector == selector
-                    //     });
-                    // }
-                    // if ((activeTab != 1 && selector) || activeTab == 1) {
-
-                    //     console.warn('preview play');
-                    //     // if selector is filled show this one tooltip, or if on tab 1 show entire tour
-                    //     tooltip.play(JSON.parse(JSON.stringify(mimikGlobal)), ownId, arg, 0, null, enigma, currSheet
-                    //         , undefined, undefined, true);  // true = preview, dont perform actions 
-                    // }
-                    // // repaint the button, too
-                    // enigma.getObject(ownId).then(obj => {
-                    //     obj.getLayout().then(layout => {
-                    //         console.log('gtour-preview-tooltip repainting, layout', layout);
-                    //         paint.paint(layout, tourJson, gtourGlobal);
-                    //     })
-                    // })
                 });
 
                 $('#gtour-as-table').click(async function () {
