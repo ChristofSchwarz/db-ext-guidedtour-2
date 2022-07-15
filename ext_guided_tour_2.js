@@ -13,7 +13,7 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
         licensedObjs: {}, // list of all extension-ids which have a license
         //tooltipsCache: {}, // the qHypercube result of each tour will be put here under the key of the objectId when started 
         cache: {}, // the qHypercube result of each tour will be put here under the key of the objectId when started 
-        formulas: {},  // structure like in cache, but only such object keys which need to be calculated in runtime 
+        formulas: {},  // structure like in cache, but every key that needs to be evaluated by Qlik is put into a subobject {qStringExpression:"..."} 
         noLicenseWarning: {}, // in order not to suppress repeating license warnings, every extension id is added here once the warning was shown
         isOEMed: null,
         isQlikCloud: location.href.indexOf('.qlikcloud.com/') > -1,
@@ -41,9 +41,7 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
             disableNavMenu: true,
             qHyperCubeDef: {
                 qMeasures: [{
-                    qDef: {
-                        qDef: '=GetCurrentSelections()'
-                    }
+                    qDef: { qDef: '=GetCurrentSelections()' }
                 }]
             }
         },

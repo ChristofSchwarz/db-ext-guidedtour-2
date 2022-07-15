@@ -1,7 +1,8 @@
 // tooltip.js: function play externalized 
 
-define(["qlik", "jquery", "./license"], function (qlik, $, license) {
+define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
 
+    /*
     // below fields are calculated as qlik formula, if their content starts with an "="
     // from tour object
     const resolveTourFields = [
@@ -12,6 +13,7 @@ define(["qlik", "jquery", "./license"], function (qlik, $, license) {
         'action1_value', 'action2_value', 'action3_value',
         'action1_field', 'action2_field', 'action3_field'
     ];
+    */
 
     return {
 

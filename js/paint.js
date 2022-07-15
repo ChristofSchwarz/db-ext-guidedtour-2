@@ -7,8 +7,8 @@ History:
 
 */
 
-define(["qlik", "jquery", "./license", "./tooltip"], function
-    (qlik, $, license, tooltip) {
+define(["qlik", "jquery", "./license", "./tooltip", "../editor/scripts/leonardo-msg"], function
+    (qlik, $, license, tooltipJs, leonardo) {
 
     const lStorageDefault = '{"openedAt":"18991231000000", "objectsOpened": {}}';
 
@@ -159,7 +159,7 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                     activeTooltip: JSON.parse(`{"${currSheet}":{"${ownId}":-2}}`)
                 };
 
-                tooltip.play(mimikGlobal, ownId, layout, 0, false, enigma, currSheet);
+                tooltipJs.play(mimikGlobal, ownId, layout, 0, false, enigma, currSheet);
 
                 // ---------------------------------------------------
             } else if (tourJson.mode == 'click') {
@@ -169,7 +169,7 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                 $(`#${ownId}_start`).click(function () {
                     if (!getActiveTour(ownId, currSheet, layout)) {
                         gtourGlobal.visitedTours[ownId] = true;
-                        tooltip.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
+                        tooltipJs.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
                     }
                 })
                 //---------------------------------------------------
@@ -191,7 +191,7 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                     }
                     if (launch) {
                         gtourGlobal.visitedTours[ownId] = true;  // remember for this session, that the tour has been started once
-                        tooltip.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
+                        tooltipJs.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
                     }
                 }
 
@@ -199,7 +199,7 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                 $(`#${ownId}_start`).click(function () {
                     if (!getActiveTour(ownId, currSheet, layout)) {
                         gtourGlobal.visitedTours[ownId] = true;
-                        tooltip.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
+                        tooltipJs.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
                     }
                 })
                 //---------------------------------------------------
@@ -226,7 +226,7 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                             log(layout, 'user already launched this tour ' + lStorageValue.openedAt + '. Servertime: ' + serverTime);
                         } else {
                             if (gtourGlobal.licensedObjs[ownId] || gtourGlobal.isOEMed != 0) {
-                                tooltip.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
+                                tooltipJs.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
                                 lStorageValue.openedAt = serverTime + ''; // save as string
                                 window.localStorage.setItem(lStorageKey, JSON.stringify(lStorageValue));
                                 log(layout, 'Stored locally: ' + JSON.stringify(lStorageValue));
@@ -247,7 +247,7 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                 // on click, tour will be restarted.
                 $(`#${ownId}_start`).click(function () {
                     if (!getActiveTour(ownId, currSheet, layout)) {
-                        tooltip.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
+                        tooltipJs.play(gtourGlobal, ownId, layout, 0, false, enigma, currSheet);
                         enigma.evaluate("=TimeStamp(Now(),'YYYYMMDDhhmmss')").then(function (serverTime) {
                             const lStorageValue = JSON.parse(window.localStorage.getItem(lStorageKey) || lStorageDefault);
                             lStorageValue.openedAt = serverTime + ''; // save as string
@@ -258,51 +258,57 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                     }
                 })
                 //---------------------------------------------------
-            } /* else if (tourJson.mode == 'hover') {
+            } else if (tourJson.mode == 'hover') {
                 //---------------------------------------------------
-                
+
                 $(`#${ownId}_hovermode`).click(function () {
-                    if (!licensed) {
-                        $(`#${ownId}_hovermode`).prop('checked', false);
-                        leonardo.msg(ownId, 'Guided-Tour Extension', noLicenseMsg('Mouse-over'), null, 'OK');
-                    } else {
+                    // check if licensed or OEMed                    
+                    if (gtourGlobal.licensedObjs[ownId] || gtourGlobal.isOEMed != 0) {
+
                         const hoverModeSwitch = $(`#${ownId}_hovermode`).is(':checked');
                         if (hoverModeSwitch == true) {
                             // switch to "on"
-                            tooltip.cacheHypercube(ownId, enigma, objFieldName, layout.pTourField, layout.pTourSelectVal)
-                                .then(function (hcube) {
-                                    gtourGlobal.tooltipsCache[ownId] = hcube;
-                                    gtourGlobal.tooltipsCache[ownId].forEach((tooltipDef, tooltipNo) => {
-                                        const divId = tooltipDef[0].qText;
-                                        $('[tid="' + divId + '"]').on('mouseover', function (elem) {
-                                            // console.log(tooltipNo, tooltipDef[1].qText);
-                                            if ($('#' + ownId + '_tooltip').length == 0) {  // tooltip is not yet open
-                                                tooltip.play2(ownId, layout, tooltipNo, false, enigma, gtourGlobal, currSheet);
-                                            }
-                                        });
-                                        $('[tid="' + divId + '"]').on('mouseout', function (elem) {
-                                            // console.log(tooltipNo, 'Closing');
-                                            $('#' + ownId + '_tooltip').remove();
-                                        });
-                                    });
-                                    gtourGlobal.activeTooltip[currSheet][ownId] = -1; // set tour to "armed" 
-                                })
-                                .catch(function () { });
+                            //tooltip.cacheHypercube(ownId, enigma, objFieldName, layout.pTourField, layout.pTourSelectVal)
+                            //    .then(function (hcube) {
+                            //        gtourGlobal.cache[ownId] = hcube;
+                            gtourGlobal.cache[ownId].tooltips.forEach((tooltip, tooltipNo) => {
+                                //const divId = tooltip.selector;
+                                $('[tid="' + tooltip.selector + '"]').on('mouseover', function (elem) {
+                                    // console.log(tooltipNo, tooltip[1].qText);
+                                    if ($('#' + tooltip.selector + '_tooltip').length == 0) {  // tooltip is not yet open
+                                        // play(gtourGlobal, ownId, layout, tooltipNo, reset, enigma, currSheet, lStorageKey, lStorageVal, previewMode)
+                                        tooltipJs.play(gtourGlobal, ownId, layout, tooltipNo, false, enigma, currSheet);
+                                    }
+                                });
+                                $('[tid="' + tooltip.selector + '"]').on('mouseout', function (elem) {
+                                    // console.log(tooltipNo, 'Closing');
+                                    $('#' + ownId + '_tooltip').remove();
+                                });
+                            });
+                            gtourGlobal.activeTooltip[currSheet][ownId] = -1; // set tour to "armed" 
+                            //    })
+                            //    .catch(function () { });
 
                         } else {
                             // switch to "off", unbind the events;
-                            gtourGlobal.tooltipsCache[ownId].forEach((tooltipDef, tooltipNo) => {
-                                const divId = tooltipDef[0].qText;
-                                $('[tid="' + divId + '"]').unbind('mouseover');
-                                $('[tid="' + divId + '"]').unbind('mouseout');
+                            gtourGlobal.cache[ownId].tooltips.forEach((tooltip, tooltipNo) => {
+                                // const divId = tooltipDef[0].qText;
+                                $('[tid="' + tooltip.selector + '"]').unbind('mouseover');
+                                $('[tid="' + tooltip.selector + '"]').unbind('mouseout');
                             });
+                            $('#' + ownId + '_tooltip').remove();
                             gtourGlobal.activeTooltip[currSheet][ownId] = -2;
                         }
+
+                    } else {
+                        // unlicensed
+                        $(`#${ownId}_hovermode`).prop('checked', false);
+                        leonardo.msg(ownId, 'Guided-Tour Extension', noLicenseMsg('Mouse-over'), null, 'OK');
                     }
                 })
-                
+
                 //---------------------------------------------------
-            } 
+            } /*
              else if (tourJson.mode == 'auto-once-p-obj') {
                 //---------------------------------------------------
                 // find out if auto-start of a tooltip is needed
@@ -314,9 +320,9 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                         tooltip.cacheHypercube(ownId, enigma, objFieldName, layout.pTourField, layout.pTourSelectVal
                             , layout.pTimestampFromDim, lStorageValue)
                             .then(function (hcube) {
-                                gtourGlobal.tooltipsCache[ownId] = hcube;
-                                if (gtourGlobal.tooltipsCache[ownId].length > 0) {
-                                    tooltip.play2(ownId, layout, 0, false, enigma, gtourGlobal, currSheet, lStorageKey, lStorageValue);
+                                gtourGlobal.cache[ownId] = hcube;
+                                if (gtourGlobal.cache[ownId].length > 0) {
+                                    tooltipJs.play2(ownId, layout, 0, false, enigma, gtourGlobal, currSheet, lStorageKey, lStorageValue);
                                 }
                             })
                             .catch(function () { });
@@ -339,8 +345,8 @@ define(["qlik", "jquery", "./license", "./tooltip"], function
                 if (!getActiveTour(ownId, currSheet, layout)) {
                     tooltip.cacheHypercube(ownId, enigma, objFieldName, layout.pTourField, layout.pTourSelectVal)
                         .then(function (hcube) {
-                            gtourGlobal.tooltipsCache[ownId] = hcube;
-                            tooltip.play2(ownId, layout, 0, false, enigma, gtourGlobal, currSheet);
+                            gtourGlobal.cache[ownId] = hcube;
+                            tooltipJs.play2(ownId, layout, 0, false, enigma, gtourGlobal, currSheet);
                         })
                         .catch(function () { });
                 }

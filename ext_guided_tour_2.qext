@@ -4,7 +4,7 @@
   "description": "Extension to show tooltips tours in Qlik Sense",
   "author": "Christof Schwarz",
   "homepage": "https://github.com/ChristofSchwarz/db-ext-guidedtour-2",
-  "version": "2.0.015",
+  "version": "2.0.100",
   "changehistory": {},
   "icon": "plus",
   "preview": "pics/databridgelogo.png",
