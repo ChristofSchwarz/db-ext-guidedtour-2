@@ -18,8 +18,10 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
     return {
 
         // ---------------------------------------------------------------------------------------------------
-        play: function (gtourGlobal, ownId, layout, tooltipNo, reset, enigma, currSheet, lStorageKey, lStorageVal, previewMode) {
-            play(gtourGlobal, ownId, layout, tooltipNo, reset, enigma, currSheet, lStorageKey, lStorageVal, previewMode)
+        play: function (gtourGlobal, ownId, layout, tooltipNo, reset, enigma,
+            currSheet, lStorageKey, lStorageVal, previewMode, multiTooltips) {
+            play(gtourGlobal, ownId, layout, tooltipNo, reset, enigma,
+                currSheet, lStorageKey, lStorageVal, previewMode, multiTooltips)
         },
 
         // ---------------------------------------------------------------------------------------------------
@@ -69,15 +71,43 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
             // console.log(JSON.stringify(copyJson));
 
             return copyJson;
-        }
+        },
 
+        findPositions: function (selector, rootContainer, tooltipSel, arrowHeadSize, bgColor, prefOrient) {
+            return findPositions(selector, rootContainer, tooltipSel, arrowHeadSize, bgColor, prefOrient)
+        },
+
+        repositionCurrToolip: function (jQueryObj, gtourGlobal) {
+
+            // the current tooltip object (referred to in jQueryObj) is being repositioned using 
+            // findPositions function. This function wraps findPositions so that only the jQuery Selector
+            // and gtourGlobal is needed and all other params to call findPositions are found in here.
+
+            const openTooltipId = $(jQueryObj).attr('id');
+            const ownId = openTooltipId.split('_')[0];
+            const openTooltipNo = $(jQueryObj).attr('tooltip-no');
+            const reference = atob($(jQueryObj).attr('reference'));
+            const bgColor = $(jQueryObj).css('background-color');
+            const tooltipDef = gtourGlobal.cache[ownId].tooltips[openTooltipNo - 1];
+            const rootContainer = gtourGlobal.isSingleMode ? '#qv-stage-container' : '#qv-page-container';
+
+            findPositions(reference, rootContainer, '#' + openTooltipId,
+                gtourGlobal.cache[ownId].arrowHead, bgColor, tooltipDef.orientation
+            );
+
+            //console.log('open tooltip is ', openTooltipId, openTooltipNo);
+        }
     }
 
     // ---------------------------------------------------------------------------------------------------
     async function play(gtourGlobal, ownId, layout, tooltipNo, reset, enigma, currSheet
-        , lStorageKey, lStorageVal, previewMode = false) {
+        , lStorageKey, lStorageVal, previewMode = false, multiTooltips = false) {
 
 
+        /*
+            multiTooltips (default false): set to true in hover-mode, it will assume that
+                multiple tooltips exist in DOM model at the same time (maybe one visible at a time)
+        */
         // var tourJson = gtourGlobal.cache[ownId];
         // await resolveQlikFormulas(tourJson, gtourGlobal.formulas[ownId], tooltipNo);
         var tourJson = await resolveQlikFormulas2(gtourGlobal.formulas[ownId]);
@@ -88,7 +118,7 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
         const opacity = tourJson.mode == 'hover' ? 1 : (tourJson.opacity || 1);
         const licensed = gtourGlobal.isOEMed ? true : gtourGlobal.licensedObjs[ownId];
         const isLast = tooltipNo >= (tourJson.tooltips.length - 1);
-
+        const tooltipDOMid = ownId + '_tooltip' + (multiTooltips ? (tooltipNo + 1) : '');
 
         if (layout.pConsoleLog) console.log(`${ownId} Play tour (previewMode ${previewMode}, tooltip ${tooltipNo}, isLast ${isLast}, licensed ${licensed}, lStorageKey ${lStorageKey})`);
 
@@ -96,13 +126,9 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
 
             function quitTour(fadeSpeed) {
                 // unfade all cells, remove the current tooltip and reset the tours counter
-                // if (opacity < 1) {
-                //$('.cell').fadeTo('fast', 1, () => { });
-                // }
-                //$('.gtour-faded').fadeTo('fast', 1, () => { }).removeClass('gtour-faded');  // reset opacity to 1 for objects that were faded
                 removeFading();
                 removeHighlighting(tourJson.tooltips[isLast ? (tooltipNo - 1) : tooltipNo]);
-                $(`#${ownId}_tooltip`).fadeTo(fadeSpeed, 0, () => { $(`#${ownId}_tooltip`).remove() });
+                $(`#${tooltipDOMid}`).fadeTo(fadeSpeed, 0, () => { $(`#${tooltipDOMid}`).remove() });
                 gtourGlobal.activeTooltip[currSheet][ownId] = -2;
                 //gtourGlobal.cache[ownId] = null;
                 // stop rotating the play icon
@@ -112,9 +138,10 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
             if (isLast) {
                 if (!licensed) {
                     // after the last item of a tour, show databridge ad for a second
-                    $(`#${ownId}_tooltip`).children().css('opacity', 0);
-                    $(`#${ownId}_text`).after(`<div style="position:absolute; top:35%; color:${$('#' + ownId + '_next').css('color')}; width:100%; left:-3px; text-align:center; font-size:medium;">
-                        Tour sponsored by <a href="https://www.databridge.ch" target="_blank" style="color:${$('#' + ownId + '_next').css('color')};">data/\\bridge</a>
+                    $(`#${tooltipDOMid}`).children().css('opacity', 0);
+                    $(`#${tooltipDOMid}_text`)
+                        .after(`<div style="position:absolute; top:35%; color:${$('#' + tooltipDOMid + '_next').css('color')}; width:100%; left:-3px; text-align:center; font-size:medium;">
+                        Tour sponsored by <a href="https://www.databridge.ch" target="_blank" style="color:${$('#' + tooltipDOMid + '_next').css('color')};">data/\\bridge</a>
                         </div>`);
                 }
                 function delay(time) {
@@ -132,7 +159,7 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
             } else {
                 quitTour('fast');
             }
-
+            $(document).unbind('keydown'); // stop key listener
 
         } else {
             // increase the tours counter and highlight next object
@@ -145,8 +172,8 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
             const currElem = tourJson.tooltips[tooltipNo] ? tourJson.tooltips[tooltipNo] : null;
             const nextElem = tourJson.tooltips[tooltipNo + 1] ? tourJson.tooltips[tooltipNo + 1] : null;
 
-            if (prevElem) {
-                $(`#${ownId}_tooltip`).remove();
+            if (prevElem && !multiTooltips) {
+                $(`#${tooltipDOMid}`).remove();
             }
             if (currElem) {
                 setTimeout(function () {
@@ -257,19 +284,22 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
                                 // add the tooltip div
 
                                 $(rootContainer).append(`
-                                <div class="lui-tooltip  gtour-toolip-parent" id="${ownId}_tooltip" tooltip-no="${tooltipNo + 1}" 
+                                <div class="lui-tooltip  gtour-tooltip-parent"
+                                    id="${tooltipDOMid}" 
+                                    tooltip-no="${tooltipNo + 1}" 
+                                    reference="${btoa(currElem.pointToSelector)}"
                                     style="${tooltipStyle};display:none;position:absolute;">
                                     <!--${currElem.pointToSelector}-->
-                                    <span style="opacity:0.6;">${tooltipNo + 1}/${tourJson.tooltips.length}</span>
-                                    <span class="lui-icon  lui-icon--close" id="${ownId}_quit" style="float:right;cursor:pointer;display:${tooltipJson.noClose ? 'none' : 'block'};${tourJson.mode == 'hover' ? 'opacity:0;' : ''}"></span>
+                                    <span style="opacity:0.6;${multiTooltips ? 'display:none;' : ''}">${tooltipNo + 1}/${tourJson.tooltips.length}</span>
+                                    <span class="lui-icon  lui-icon--close" id="${tooltipDOMid}_quit" style="float:right;cursor:pointer;display:${tooltipJson.noClose ? 'none' : 'block'};${tourJson.mode == 'hover' ? 'opacity:0;' : ''}"></span>
                                     ${knownObjId == 0 ? '<br/><div class="gtour-err">Object <strong>' + qObjId + '</strong> not found!</div>' : '<br/>'}
                                     ${knownObjId > 1 ? '<br/><div class="gtour-err"><strong>' + qObjId + '</strong> selects ' + knownObjId + ' objects!</div>' : '<br/>'}
-                                    <div id="${ownId}_text" class="gtour-text" style="font-size:${tourJson.fontsize}">
+                                    <div id="${tooltipDOMid}_text" class="gtour-text" style="font-size:${tourJson.fontsize}">
                                         ${vizId ? '<!--placeholder for chart-->' : html}
                                     </div>
                                     <a class="lui-button  gtour-next" 
                                     style="${tourJson.mode == 'hover' ? 'opacity:0;' : ''}border-color:${tourJson.bordercolor};${(tooltipJson.hideNextButton && knownObjId > 0) ? 'display:none;' : ''}" 
-                                    id="${ownId}_next">${isLast ? tourJson.btnLabelDone : tourJson.btnLabelNext}</a>
+                                    id="${tooltipDOMid}_next">${isLast ? tourJson.btnLabelDone : tourJson.btnLabelNext}</a>
                                     <div class="lui-tooltip__arrow"></div>
                                 </div>`);
 
@@ -277,7 +307,7 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
                                 // Background: Quill text editor has the option to add a code block and this is put inside <pre> </pre> tags.
                                 // Here we unwrap the code and interpret it as HTML
                                 try {
-                                    const preTags = document.querySelectorAll(`#${ownId}_text pre`);
+                                    const preTags = document.querySelectorAll(`#${tooltipDOMid}_text pre`);
                                     preTags.forEach(function (preTag) {
                                         var span = document.createElement('span');
                                         span.innerHTML = preTag.innerText;
@@ -287,28 +317,29 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
 
                                 if (vizId) {
                                     const app = qlik.currApp();
-                                    $(`#${ownId}_text`).css('height', ($(`#${ownId}_tooltip`).height() - 90) + 'px');
+                                    $(`#${tooltipDOMid}_text`).css('height', ($(`#${tooltipDOMid}`).height() - 90) + 'px');
                                     // https://help.qlik.com/en-US/sense-developer/June2020/Subsystems/APIs/Content/Sense_ClientAPIs/CapabilityAPIs/VisualizationAPI/get-method.htm
                                     app.visualization.get(vizId).then(function (viz) {
-                                        viz.show(ownId + '_text');
+                                        viz.show(tooltipDOMid + '_text');
                                     }).catch(function (err3) {
                                         console.error(err3);
-                                        $(`#${ownId}_text`).html('Error getting object ' + vizId + ':' + JSON.stringify(err3))
+                                        $(`#${tooltipDOMid}_text`).html('Error getting object ' + vizId + ':' + JSON.stringify(err3))
                                     })
                                 }
 
 
                                 // get the current colors, because the attribute-dimension can overrule the first color and background-color style setting
-                                fontColor = $(`#${ownId}_tooltip`).css('color');
-                                bgColor = $(`#${ownId}_tooltip`).css('background-color');
-                                $(`#${ownId}_next`).css('color', fontColor); // set the a-tag button's font color
-
+                                fontColor = $(`#${tooltipDOMid}`).css('color');
+                                bgColor = $(`#${tooltipDOMid}`).css('background-color');
+                                $(`#${tooltipDOMid}_next`).css('color', fontColor); // set the a-tag button's font color
 
                                 // register click trigger for "X" (quit) and Next/Done button
-                                $(`#${ownId}_quit`).click(function () {
-                                    play(gtourGlobal, ownId, layout, tooltipNo, true, enigma, currSheet, lStorageKey, lStorageVal)
+                                $(`#${tooltipDOMid}_quit`).click(function () {
+                                    play(gtourGlobal, ownId, layout, tooltipNo, true, enigma,
+                                        currSheet, lStorageKey, lStorageVal)
                                 });
-                                $(`#${ownId}_next`).click(async function () {
+
+                                $(`#${tooltipDOMid}_next`).click(async function () {
 
                                     // if an on-close action is set, now it's the time to execute it
                                     if (!previewMode && licensed && tooltipJson.action1_use && tooltipJson.action1_timing == 'after') {
@@ -326,30 +357,39 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
                                     removeHighlighting(tooltipJson);
                                     if (nextElem && nextElem.delaybefore) removeFading();
 
-                                    play(gtourGlobal, ownId, layout, tooltipNo + 1, isLast, enigma, currSheet, lStorageKey, lStorageVal, previewMode)
+                                    play(gtourGlobal, ownId, layout, tooltipNo + 1, isLast, enigma,
+                                        currSheet, lStorageKey, lStorageVal, previewMode, multiTooltips)
 
                                 });
 
-                                const calcPositions = findPositions(currElem.pointToSelector, rootContainer, `#${ownId}_tooltip`, arrowHeadSize, bgColor, orientation);
+                                // handle Esc and Return key
+                                $(document).keydown(function (e) {
+                                    const key = e.keyCode || e.which;
+                                    if (key == 13 && $(`#${tooltipDOMid}_next`).css('display') == 'block') {
+                                        // Return key pressed and Next button is visible
+                                        $(`#${tooltipDOMid}_next`).click();
+                                    }
+                                    if (key == 27 && $(`#${tooltipDOMid}_quit`).css('display') == 'block') {
+                                        // Return key pressed and Next button is visible
+                                        $(`#${tooltipDOMid}_quit`).click();
+                                    }
+                                })
 
-                                $(`#${ownId}_tooltip`)
-                                    .css('left', calcPositions.left).css('right', calcPositions.right)  // left or right
-                                    .css('top', calcPositions.top).css('bottom', calcPositions.bottom)  // top or bottom
-                                    .attr('orient', calcPositions.orient);
-                                // remove possible previous arrow-heads
-                                $(`#${ownId}_tooltip .gtour-arrowhead`).remove();
-                                // render new arrow-head
-                                if (calcPositions.arrow) $(`#${ownId}_tooltip .lui-tooltip__arrow`).after(calcPositions.arrow);  // arrowhead
+                                const calcPositions = findPositions(currElem.pointToSelector, rootContainer, `#${tooltipDOMid}`, arrowHeadSize, bgColor, orientation);
 
-                                // setTimeout(function () {
-                                $(`#${ownId}_tooltip`).show();
-                                // }, tooltipJson.delaybefore ? (tooltipJson.delaybefore * 1000) : 1);
+                                // $(`#${tooltipDOMid}`)
+                                //     .css('left', calcPositions.left).css('right', calcPositions.right)  // left or right
+                                //     .css('top', calcPositions.top).css('bottom', calcPositions.bottom)  // top or bottom
+                                //     .attr('orient', calcPositions.orient);
+                                // // remove possible previous arrow-heads
+                                // $(`#${tooltipDOMid} .gtour-arrowhead`).remove();
+                                // // render new arrow-head
+                                // if (calcPositions.arrow) $(`#${tooltipDOMid} .lui-tooltip__arrow`).after(calcPositions.arrow);  // arrowhead
 
+                                if (!multiTooltips) {
+                                    $(`#${tooltipDOMid}`).show();
+                                }
                             })
-                        // .catch(function (err) {
-                        //     console.error(err);
-                        // })
-
                     }
 
                     if (knownObjId) {   // hmm, knownObjId is undefined at this point. test scrollintoview
@@ -603,7 +643,16 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
         if (tooltip.bottom) tooltip.bottom += 'px';
         tooltip.orient = orientation;
 
-        console.log('orientation', orientation, tooltip);
+        // console.log('orientation', orientation, tooltip);
+        // apply positions
+        $(tooltipSel)
+            .css('left', tooltip.left).css('right', tooltip.right)  // left or right
+            .css('top', tooltip.top).css('bottom', tooltip.bottom)  // top or bottom
+            .attr('orient', tooltip.orient);
+        // remove possible previous arrow-heads
+        $(`${tooltipSel} .gtour-arrowhead`).remove();
+        // render new arrow-head
+        if (tooltip.arrow) $(`${tooltipSel} .lui-tooltip__arrow`).after(tooltip.arrow);  // arrowhead
 
         return tooltip;
     }

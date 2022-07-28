@@ -1,6 +1,6 @@
 define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
     "./js/tooltip", "./js/license", "./js/store"], function
-    (qlik, $, cssContent, props, paint, tooltip, license, store) {
+    (qlik, $, cssContent, props, paint, tooltipJs, license, store) {
 
     'use strict';
 
@@ -57,7 +57,7 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
                 }, {
                     uses: "settings"
                 }, {
-                    label: '/\\ Guided Tour Editor & Settings',
+                    label: 'Editor & Settings',
                     type: 'items',
                     items: props.presentation(gtourGlobal)
                 }, {
@@ -74,39 +74,40 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
         snapshot: {
             canTakeSnapshot: false
         },
-        /*
-                resize: function ($element, layout) {
-        
-                    const ownId = layout.qInfo.qId;
-                    const app = qlik.currApp(this);
-                    const enigma = app.model.enigmaModel
-                    const licensed = gtourGlobal.licensedObjs[ownId];
-                    const mode = qlik.navigation.getMode();
-                    const rootContainer = '#qv-page-container';
-        
-                    if (mode != 'edit') $('.gtour-picker').remove();
-                    if (layout.pConsoleLog) console.log(ownId, 'resize', layout, gtourGlobal);
-        
-                    // if a tooltip is open, reposition it
-        
-                    if ($(`#${ownId}_tooltip`).length > 0) {
-                        // get the target-selector from a html comment inside the tooltip
-                        const oldSelector = $(`#${ownId}_tooltip`).html().split('-->')[0].split('<!--')[1] || '';
-                        const oldOrient = $(`#${ownId}_tooltip`).attr("orient");
-                        const calcPositions = tooltip.findPositions(oldSelector, rootContainer, `#${ownId}_tooltip`
-                            , layout, $(`#${ownId}_tooltip`).css('background-color'), oldOrient);
-                        $(`#${ownId}_tooltip`)
-                            .css('left', calcPositions.left).css('right', calcPositions.right)  // left or right
-                            .css('top', calcPositions.top).css('bottom', calcPositions.bottom)  // top or bottom
-                            .attr('orient', calcPositions.orient);
-                        $('.gtour-arrowhead').remove(); // the arrowhead may have changed toother edge; remove the old
-                        if (calcPositions.arrow) $(`#${ownId}_tooltip .lui-tooltip__arrow`).after(calcPositions.arrow);  // arrowhead
-        
-                    }
-        
-                    return qlik.Promise.resolve();
-                },
-        */
+
+        resize: function ($element, layout) {
+
+            const ownId = layout.qInfo.qId;
+            const app = qlik.currApp(this);
+            const enigma = app.model.enigmaModel
+            //const licensed = gtourGlobal.licensedObjs[ownId];
+            const mode = qlik.navigation.getMode();
+
+            // if (mode != 'edit') $('.gtour-picker').remove();
+            if (layout.pConsoleLog) console.log(ownId, 'resize', layout, gtourGlobal);
+
+            $('.gtour-tooltip-parent').each(function (i) {
+                if ($(this).css('display') != 'none') {
+                    // a visible tooltip is open.
+                    tooltipJs.repositionCurrToolip(this, gtourGlobal);
+                    // const openTooltipId = $(this).attr('id');
+                    // const openTooltipNo = $(this).attr('tooltip-no');
+                    // const reference = atob($(this).attr('reference'));
+                    // const bgColor = $(this).css('background-color');
+                    // const tooltipDef = gtourGlobal.cache[ownId].tooltips[openTooltipNo - 1];
+                    // const rootContainer = gtourGlobal.isSingleMode ? '#qv-stage-container' : '#qv-page-container';
+
+                    // tooltipJs.findPositions(reference, rootContainer, '#' + openTooltipId,
+                    //     gtourGlobal.cache[ownId].arrowHead, bgColor, tooltipDef.orientation
+                    // );
+
+                    // console.log('open tooltip is ', openTooltipId, openTooltipNo);
+                }
+            });
+
+            return qlik.Promise.resolve();
+        },
+
         paint: async function ($element, layout) {
 
             const ownId = layout.qInfo.qId;
@@ -134,8 +135,8 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
 
                 const tourJson = await store.loadTour(gtourGlobal, layout.pTourName, layout.pStorageProvider,
                     app.id, true, layout.pConsoleLog);
-                gtourGlobal.formulas[ownId] = tooltip.getKeysWithFormulas(tourJson);
-                gtourGlobal.cache[ownId] = await tooltip.resolveQlikFormulas2(gtourGlobal.formulas[ownId]);
+                gtourGlobal.formulas[ownId] = tooltipJs.getKeysWithFormulas(tourJson);
+                gtourGlobal.cache[ownId] = await tooltipJs.resolveQlikFormulas2(gtourGlobal.formulas[ownId]);
 
                 // gtourGlobal.cache[ownId] = tourJson;
 
@@ -152,4 +153,5 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
             return qlik.Promise.resolve();
         }
     }
+
 })

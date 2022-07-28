@@ -45,6 +45,7 @@ define([
             $('#tab-1').css('height', (window.innerHeight - 75) + 'px');
 
             $('#tab-1-accordion').append(tourPropsHTML);
+            $('#gtour-editor-info').text(location.href); // put info from where the editor was opened into div tag
 
             // make accordion  functional 
             $(function () {
@@ -110,6 +111,8 @@ define([
 
             const activeTab = $('.ui-tabs-active').attr('id');
             $('#tab-' + activeTab + '-accordion [key="selector"]').val(event.data.selector);
+            // unmark selection button (remove class picker-active)
+            $('.picker-active').removeClass('picker-active');
 
         }
     }

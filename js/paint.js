@@ -267,27 +267,21 @@ define(["qlik", "jquery", "./license", "./tooltip", "../editor/scripts/leonardo-
 
                         const hoverModeSwitch = $(`#${ownId}_hovermode`).is(':checked');
                         if (hoverModeSwitch == true) {
-                            // switch to "on"
-                            //tooltip.cacheHypercube(ownId, enigma, objFieldName, layout.pTourField, layout.pTourSelectVal)
-                            //    .then(function (hcube) {
-                            //        gtourGlobal.cache[ownId] = hcube;
                             gtourGlobal.cache[ownId].tooltips.forEach((tooltip, tooltipNo) => {
-                                //const divId = tooltip.selector;
+                                const tooltipDOMid = `${ownId}_tooltip${tooltipNo + 1}`;
+                                tooltipJs.play(gtourGlobal, ownId, layout, tooltipNo, false, enigma,
+                                    currSheet, undefined, undefined, undefined, true);
                                 $('[tid="' + tooltip.selector + '"]').on('mouseover', function (elem) {
-                                    // console.log(tooltipNo, tooltip[1].qText);
-                                    if ($('#' + tooltip.selector + '_tooltip').length == 0) {  // tooltip is not yet open
-                                        // play(gtourGlobal, ownId, layout, tooltipNo, reset, enigma, currSheet, lStorageKey, lStorageVal, previewMode)
-                                        tooltipJs.play(gtourGlobal, ownId, layout, tooltipNo, false, enigma, currSheet);
-                                    }
+                                    //console.log(tooltip.selector, 'mouseover');
+                                    $(`#${tooltipDOMid}`).show();
+                                    tooltipJs.repositionCurrToolip(`#${tooltipDOMid}`, gtourGlobal);
                                 });
                                 $('[tid="' + tooltip.selector + '"]').on('mouseout', function (elem) {
-                                    // console.log(tooltipNo, 'Closing');
-                                    $('#' + ownId + '_tooltip').remove();
+                                    //console.log(tooltip.selector, 'mouseout');
+                                    $(`#${tooltipDOMid}`).hide();
                                 });
                             });
                             gtourGlobal.activeTooltip[currSheet][ownId] = -1; // set tour to "armed" 
-                            //    })
-                            //    .catch(function () { });
 
                         } else {
                             // switch to "off", unbind the events;
@@ -296,8 +290,8 @@ define(["qlik", "jquery", "./license", "./tooltip", "../editor/scripts/leonardo-
                                 $('[tid="' + tooltip.selector + '"]').unbind('mouseover');
                                 $('[tid="' + tooltip.selector + '"]').unbind('mouseout');
                             });
-                            $('#' + ownId + '_tooltip').remove();
-                            gtourGlobal.activeTooltip[currSheet][ownId] = -2;
+                            $('.gtour-tooltip-parent').remove();
+                            gtourGlobal.activeTooltip[currSheet][ownId] = -2;  // set tour to "off"
                         }
 
                     } else {

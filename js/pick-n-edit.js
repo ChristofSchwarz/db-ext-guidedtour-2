@@ -15,7 +15,18 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
             const currSheet = qlik.navigation.getCurrentSheetId().sheetId;
             const app = qlik.currApp(this);
             const enigma = app.model.enigmaModel;
-            const editorUrl = arg.pEditorUrl == 'custom' ? arg.pEditorCustom : arg.pEditorUrl;
+            var editorUrl = arg.pEditorUrl == 'other' ? arg.pEditorCustom : arg.pEditorUrl;
+            const editorLocations = {
+                "custom": arg.pEditorCustom,
+                "christofschwarz.github.io": `https://christofschwarz.github.io/${arg.extensionMeta.qextVersion}/editor.html`,
+                "qs-i-dev.databridge.ch": `https://qs-i-dev.databridge.ch/anonym/extensions/db-ext-gtour-editor/${arg.extensionMeta.qextVersion}/editor.html`
+            }
+            editorUrl = editorLocations[editorUrl] || editorUrl;
+
+            if (arg.pConsoleLog) {
+                console.log('pick-n-edit.js: editTour()', arg);
+                console.log('editorUrl:', editorUrl);
+            }
 
             const origWidth = $('.qv-panel-properties').width();
             $('.qv-panel-properties').css('max-width', origWidth + 'px');
@@ -32,8 +43,6 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
                     $('.gtour-editor').remove();
                 }
             }
-
-            if (arg.pConsoleLog) console.log('pick-n-edit.js: editTour()', arg);
 
             if (justUnhide) {
                 // if the editor has been opened before, unhide it
@@ -75,6 +84,9 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
 
                     } else if (event.data.msg == 'saveAndClose') {
 
+                        removePickers();
+                        $('#' + ownId + '_tooltip_quit').click(); // if a tooltip is open, close it
+
                         await store.saveTour(gtourGlobal, arg.pTourName, arg.pStorageProvider, event.data.tourJson, app.id);
                         gtourGlobal.cache[ownId] = event.data.tourJson;
                         closeEditor(origWidth, false);
@@ -86,7 +98,8 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
 
                     } else if (event.data.msg == 'closePreview') {
 
-                        $('#' + ownId + '_tooltip').remove(); // if another tooltip is open, close it
+                        $('#' + ownId + '_tooltip_quit').click(); // if a tooltip is open, close it
+                        // $('#' + ownId + '_tooltip').remove(); // if another tooltip is open, close it
 
                     } else if (event.data.msg == 'previewTooltip') {
 
@@ -96,9 +109,8 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
                         const selector = event.data.selector;
                         const activeTab = event.data.activeTab;
 
-                        //const selector = $editor('#tab-' + activeTab + '-accordion [key="selector"]').val();
-                        // const html = $editor('#tab-' + activeTab + '-accordion .ql-editor').html();
-                        $('#' + ownId + '_tooltip').remove(); // if another tooltip is open, close it
+                        removePickers();
+                        // $('#' + ownId + '_tooltip_quit').click(); // if a tooltip is open, close it
 
                         // build a partial copy of the gtourGlobal object with only the current tour.
                         var mimikGlobal = {
@@ -140,11 +152,12 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
 
                     } else if (event.data.msg == 'startPicker') {
 
-                        $('#' + ownId + '_quit').click(); // if a tooltip is open, close it
+                        $('#' + ownId + '_tooltip_quit').click(); // if a tooltip is open, close it
                         pick(arg); //, event.data.activeTab);
 
                     } else if (event.data.msg == 'quitPicker') {
                         $('.gtour-picker').remove();
+                        $('.gtour-picker-container').remove();
 
                     } else if (event.data.msg == 'showAsTable') {
                         console.log(event.data.tourJson);
@@ -338,17 +351,10 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
         );
     }
 
-    /*
-    function $editor(selector) {
-        // function that wraps the iframe editor for jquery methods
-        return $('#gtour-editor-iframe').contents().find(selector);
-    }*/
 
-    function divPICK(classes, label) {
-        return `<div 
-            style="position:absolute; z-index:100; background-color:#079B4A; 
-            cursor:pointer; color:white; border-radius: 10px; padding: 0 10px;height: 20px; line-height:20px;" 
-            class="${classes}">
+    function divPICK(classes = 'gtour-picker', label = 'PICK') {
+        // renders the PICK div
+        return `<div class="${classes}">
                 ${label}
             </div>`;
     }
@@ -365,34 +371,32 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
         $('body.qv-client.qv-sheet-enabled.qv-view-sheet.qv-card').off('mousedown');
     }
 
+    function removePickers() {
+        $(".gtour-picker").remove(); // remove previous pickers
+        $(".gtour-picker-container").remove();
+    }
+
     function pick(arg) {
         const ownId = arg.qInfo.qId;
         // const currSheet = qlik.navigation.getCurrentSheetId().sheetId;
         bypassQlikClick();
+        removePickers();
 
-        $(".gtour-picker").remove(); // remove previous divs
 
         $(".cell")
             .not(`[tid="${arg.qInfo.qId}"]`)
             .find(".qv-inner-object")
             .each(function (i) {
                 // add divs overlaying every Sense object
-                console.log(
-                    i,
-                    this.parentElement
-                );
-                // if the element is a container, skip it
-                if (
-                    this.parentElement.attributes["tid"] &&
-                    this.parentElement.attributes["tid"].value != "qv-object-container"
-                ) {
-                    $(this)
-                        .prepend(divPICK('gtour-picker', 'PICK'));
-                }
+                $(this).prepend(divPICK('gtour-picker', 'PICK'));
             });
 
         // if an element inside a container was selected above (now has a PICK div), remove it again
-        $(".cell .qv-object-container .gtour-picker").remove();
+        $(".cell .qv-object-container .gtour-picker").each(function () {
+            if (!this.parentElement.parentElement.classList.contains('qv-object-container')) {
+                $(this).remove();
+            }
+        });
 
         // special care of container objects, add picker per tab (li-tag)
         $(".cell .qv-object-container li")
@@ -401,8 +405,7 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
         function choseObj(objId, tidOrCss) {
 
             console.log(ownId, "Picked object Id " + objId);
-            $(".gtour-picker").remove();
-            $(".gtour-picker-container").remove();
+            removePickers();
 
             document.getElementById('gtour-editor-iframe').contentWindow.postMessage({
                 msg: 'pasteSelector',

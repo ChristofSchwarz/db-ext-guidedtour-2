@@ -31,32 +31,6 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg"], function
 
     return {
 
-        // dummyUpload: async function () {
-
-        //     var uploadFormData = new FormData();
-        //     // https://www.semicolonworld.com/question/21154/sending-formdata-with-a-binary-data-by-using-jquery-ajax
-
-        //     //uploadFormData.append("file", new Blob([smallestGIF], { type: "application/octet-stream" }));
-        //     uploadFormData.append("file", new Blob([smallestGIF], { type: "image/gif" }));
-
-        //     var xrfkey = 'RvyIQG8CbGw7lzec';
-        //     var headers = [];
-        //     headers["X-Qlik-Xrfkey"] = xrfkey;
-        //     $.ajax({
-        //         url: 'https://qs-i-dev.databridge.ch/qrs/appcontent/e506dfb6-dee4-49e6-9258-c77180e2fcab/uploadfile?externalpath=test_gtour.gif&overwrite=true&xrfkey=' + xrfkey,
-        //         //type: "POST",
-        //         method: 'POST',
-        //         data: uploadFormData,
-        //         //cache: false,
-        //         contentType: false,
-        //         processData: false,
-        //         headers: headers,
-        //         success: function (r) {
-        //             alert("Success!");
-        //         }
-        //     });
-        // },
-
         //--------------------------------------------------------------------------------
         existsTour: async function (tourName, providerId, appId, log = true) {
             //----------------------------------------------------------------------------

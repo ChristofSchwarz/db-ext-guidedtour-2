@@ -13,7 +13,7 @@
   -webkit-transform: rotate(1turn);
 }
 
-.gtour-toolip-parent {
+.gtour-tooltip-parent {
   font-family: Source Sans Pro, sans-serif;
 }
 
@@ -84,4 +84,21 @@
   position: absolute;
   text-align: center;
   width: 100%;
+}
+
+
+.gtour-picker, .gtour-picker-container {
+  position:absolute; 
+  z-index:100; 
+  background-color:#079B4A; 
+  cursor:pointer; 
+  color:white; 
+  font-weight: normal;
+  border-radius: 10px; 
+  padding: 0 10px;
+  height: 20px; 
+  line-height:20px;
+}
+.gtour-picker-container {
+  margin-left: 50px;
 }

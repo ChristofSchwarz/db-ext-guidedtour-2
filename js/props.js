@@ -194,17 +194,28 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license", "./pick
                         component: 'dropdown',
                         ref: 'pEditorUrl',
                         options: [
-                            //{ value: "../extensions/ext_guided_tour_2/editor/editor.html", label: 'internal' },
-                            { value: "https://qs-i-dev.databridge.ch/anonym/extensions/ext_guided_tour_2/editor/editor.html", label: 'data/\\bridge Cloud Location 1' },
-                            // { value: "import", tooltip: lbl.import, label: 'Imp' },
-                            { value: "other", label: 'Other' }
+                            {
+                                value: "qs-i-dev.databridge.ch"
+                            },
+                            {
+                                value: "christofschwarz.github.io"
+                            },
+                            {
+                                value: "other",
+                                label: 'Other'
+                            }
                         ],
-                        defaultValue: "https://qs-i-dev.databridge.ch/anonym/extensions/ext_guided_tour_2/editor/editor.html"
+                        defaultValue: "christofschwarz.github.io"
                     }, {
                         label: 'Tour Editor location',
                         type: 'string',
                         ref: 'pEditorCustom',
+                        defaultValue: "https://qs-i-dev.databridge.ch/anonym/extensions/ext_guided_tour_2/editor/editor.html",
                         show: function (arg) { return arg.pEditorUrl == 'other' }
+                    }, {
+                        label: "Don't forget to set a CSP for 'frame-src' for above hostname in your Qlik Cloud Console Content Security Policy",
+                        component: "text",
+                        show: function (arg) { return location.href.indexOf('qlikcloud.com') > -1 }
                     }, {
                         type: "boolean",
                         defaultValue: false,
