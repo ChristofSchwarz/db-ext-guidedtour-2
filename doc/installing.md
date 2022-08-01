@@ -1,6 +1,6 @@
 # Installing the extension
 
-[back](../readme.md) | [On Qlik Cloud] (.) | [On Qlik Sense for Windows] (.)
+[back](../README.md) | [On Qlik Cloud] (.) | [On Qlik Sense for Windows] (.)
 
 ## On Qlik Cloud
 
