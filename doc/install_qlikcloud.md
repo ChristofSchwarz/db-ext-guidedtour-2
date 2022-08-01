@@ -1,6 +1,6 @@
 # Installing on Qlik Saas (qlikcloud.com)
 
-[back](../readme.md) 
+[back](./readme.md) 
 
 The extension can be used on Qlik Cloud editions as well. For the users it will work with *no further* configuration. If you want *to edit* the tour 
 (=develop the tour content on qlikcloud.com) you need to 
