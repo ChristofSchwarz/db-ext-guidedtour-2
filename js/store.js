@@ -15,7 +15,7 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg"], function
         "fontsize": "medium",
         "arrowHead": 12,
         "opacity": 0.2,
-        "width": "250",
+        "width": "300",
         "bgcolor": "black",
         "fontcolor": "white",
         "bordercolor": "gray",
@@ -32,7 +32,7 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg"], function
     return {
 
         //--------------------------------------------------------------------------------
-        existsTour: async function (tourName, providerId, appId, log = true) {
+        existsTour: async function (tourName, providerId, appId, log = false) {
             //----------------------------------------------------------------------------
 
             const mode = location.href.indexOf('qlikcloud.com') > -1 ? 'cloud' : 'windows';
@@ -67,7 +67,7 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg"], function
         },
 
         //--------------------------------------------------------------------------------
-        saveTour: async function (gtourGlobal, tourName, providerId, tourJson = tourDefault, appId, log = true) {
+        saveTour: async function (gtourGlobal, tourName, providerId, tourJson = tourDefault, appId, log = false) {
             //----------------------------------------------------------------------------
             if (log) console.log('calling saveTour', tourName, tourJson);
 
@@ -136,7 +136,7 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg"], function
         },
 
         //--------------------------------------------------------------------------------
-        loadTour: async function (gtourGlobal, tourName, providerId, appId, skipBypassedTTs = false, log = true) {
+        loadTour: async function (gtourGlobal, tourName, providerId, appId, skipBypassedTTs = false, log = false) {
             const app = qlik.currApp();
             const enigma = app.model.enigmaModel;
             //----------------------------------------------------------------------------
@@ -221,7 +221,7 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg"], function
         },
 
         //--------------------------------------------------------------------------------
-        listTours: async function (gtourGlobal, providerId, appId, log = true) {
+        listTours: async function (gtourGlobal, providerId, appId, log = false) {
             //----------------------------------------------------------------------------
             const app = qlik.currApp();
             const enigma = app.model.enigmaModel;
@@ -295,7 +295,7 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg"], function
         },
 
         //--------------------------------------------------------------------------------
-        deleteTour: async function (gtourGlobal, tourName, providerId, appId, log = true) {
+        deleteTour: async function (gtourGlobal, tourName, providerId, appId, log = false) {
             //----------------------------------------------------------------------------
 
             if (log) console.log('calling deleteTour');
@@ -335,7 +335,7 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg"], function
     }
 
     //=============================================================================================
-    async function restCall(method, endpoint, body, log = true, contentType) {
+    async function restCall(method, endpoint, body, log = false, contentType) {
         //=========================================================================================
         // Calling an API. 
 

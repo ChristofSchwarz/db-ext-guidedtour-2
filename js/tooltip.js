@@ -270,14 +270,14 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
                                     }
 
                                     // save the time this object was rendered if in auto-once mode
-                                    if (tourJson.mode == 'auto-once-p-obj' && lStorageKey && lStorageVal) {
-                                        enigma.evaluate("Timestamp(Now(),'YYYYMMDDhhmmss')") // get server time
-                                            .then(function (serverTime) {
-                                                lStorageVal.objectsOpened[qObjId] = serverTime;
-                                                window.localStorage.setItem(lStorageKey, JSON.stringify(lStorageVal));
-                                                if (layout.pConsoleLog) console.log(ownId, 'Stored locally ', lStorageKey, JSON.stringify(lStorageVal));
-                                            });
-                                    }
+                                    // if (tourJson.mode == 'auto-once-p-obj' && lStorageKey && lStorageVal) {
+                                    //     enigma.evaluate("Timestamp(Now(),'YYYYMMDDhhmmss')") // get server time
+                                    //         .then(function (serverTime) {
+                                    //             lStorageVal.objectsOpened[qObjId] = serverTime;
+                                    //             window.localStorage.setItem(lStorageKey, JSON.stringify(lStorageVal));
+                                    //             if (layout.pConsoleLog) console.log(ownId, 'Stored locally ', lStorageKey, JSON.stringify(lStorageVal));
+                                    //         });
+                                    // }
 
                                 }
 
@@ -302,7 +302,7 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
                                     id="${tooltipDOMid}_next">${isLast ? tourJson.btnLabelDone : tourJson.btnLabelNext}</a>
                                     <div class="lui-tooltip__arrow"></div>
                                 </div>`);
-
+                                console.log(`Now there are ${$('.gtour-tooltip-parent').length} tooltips in DOM.`);
                                 // replace <pre> tags with <span> and put included text as html
                                 // Background: Quill text editor has the option to add a code block and this is put inside <pre> </pre> tags.
                                 // Here we unwrap the code and interpret it as HTML
@@ -754,8 +754,6 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
 
         // if in some specific keys of tourJson a Qlik Formula is used (defined in the formulas object) 
         // evaluate those so they get resolved, then set the result in tourJson.
-        // if no tooltipNo is given, all tooltip array elements are searched
-        // if tooltipNo is given, then the tourJson and only the specific element in tooltips array is evaluated
 
         const app = qlik.currApp();
         const enigma = app.model.enigmaModel;

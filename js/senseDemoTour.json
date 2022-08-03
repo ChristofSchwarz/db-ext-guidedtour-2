@@ -1,0 +1,31 @@
+{
+  "mode": "click",
+  "fontsize": "medium",
+  "arrowHead": 12,
+  "opacity": 0.2,
+  "width": 250,
+  "bgcolor": "black",
+  "fontcolor": "white",
+  "bordercolor": "gray",
+  "btnLabelNext": "Next",
+  "btnLabelDone": "Done",
+  "tooltips": [
+    {
+      "bypass": false,
+      "noClose": false,
+      "hideNextButton": false,
+      "selector": "[tid=\"btnQuickNavNext\"]",
+      "html": "<p>This button gets you to the next sheet if you are not on the last sheet.</p>"
+    },
+    {
+      "selector": "[tid=\"btnQuickNavPrevious\"]",
+      "html": "<p>This button gets you to the previous sheet if you are not on the first sheet.</p>"
+    },
+    {
+      "selector": "[data-testid=\"qs-sub-toolbar-selection-list\"]",
+      "html": "<p>If you make any selections you will see them up here</p>"
+    }
+  ],
+  "relaunchAfter": "19000101000000",
+  "autoLaunchCond": ""
+}

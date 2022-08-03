@@ -56,19 +56,10 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
                     max: 6
                 }, {
                     uses: "settings"
-                }, {
-                    label: 'Editor & Settings',
-                    type: 'items',
-                    items: props.presentation(gtourGlobal)
-                }, {
-                    label: 'License',
-                    type: 'items',
-                    items: props.licensing(gtourGlobal)
-                }, {
-                    label: 'About this extension',
-                    type: 'items',
-                    items: props.about(gtourGlobal.qext)
-                }
+                },
+                props.editorAndSettings(gtourGlobal),
+                props.licensing(gtourGlobal),
+                props.about(gtourGlobal.qext)
             ]
         },
         snapshot: {

@@ -137,7 +137,9 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
 
                         if ((activeTab != 1 && selector) || activeTab == 1) {
 
-                            console.warn('preview play');
+                            // console.warn('preview play');
+                            $('.gtour-tooltip-parent').remove(); // if other tooltips are in DOM, remove them
+
                             // if selector is filled show this one tooltip, or if on tab 1 show entire tour
                             tooltip.play(JSON.parse(JSON.stringify(mimikGlobal)), ownId, arg, 0, null, enigma, currSheet
                                 , undefined, undefined, true);  // true = preview, dont perform actions 
@@ -161,6 +163,7 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
 
                     } else if (event.data.msg == 'showAsTable') {
                         console.log(event.data.tourJson);
+                        $('#' + ownId + '_tooltip_quit').click(); // if a tooltip is open, close it
 
                         const qlikify = function (value, key) {
 
