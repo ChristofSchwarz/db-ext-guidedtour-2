@@ -1,4 +1,4 @@
-define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
+define(["qlik", "jquery", "text!./css/styles.css", "./js/props", "./js/paint",
     "./js/tooltip", "./js/license", "./js/store"], function
     (qlik, $, cssContent, props, paint, tooltipJs, license, store) {
 
@@ -104,7 +104,9 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
             const ownId = layout.qInfo.qId;
             const app = qlik.currApp(this);
             const enigma = app.model.enigmaModel;
-
+            if (!gtourGlobal.engineVersion) {
+                gtourGlobal.engineVersion = await enigma.global.engineVersion()
+            }
             gtourGlobal.isSingleMode = document.location.href.split('?')[0].split('/').indexOf('single') > -1;
             if (layout.pConsoleLog) console.log(ownId, 'paint', layout, gtourGlobal);
             /*
@@ -119,8 +121,8 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
                         };*/
             if (!layout.pTourName) {
                 $element.html('<div class="gtour-center-middle">'
-                    + '<span class="lui-icon  lui-icon--info"></span>&nbsp;'
-                    + 'No tour assigned to this element.<br>Set it in the properties panel.</div>');
+                    //+ '<span class="lui-icon  lui-icon--info"></span>&nbsp;'
+                    + ' \u26a0\ufe0f No tour assigned to this element.<br>Set it in the properties panel.</div>');
 
             } else {
 
@@ -138,7 +140,7 @@ define(["qlik", "jquery", "text!./styles.css", "./js/props", "./js/paint",
                     'WyJDYXNlTGVhZFRpbWUiLCJQcm9jZXNzUGF0aFVuaXF1ZU5vIiwiVW5pcXVlU29ydGVkUm93Tm8iLCJQcm9j'
                     + 'ZXNzUGF0aCIsIkFjdGl2aXR5VHlwZUlEIiwiUHJvY2Vzc1N0ZXBGb2xsb3dVcElkbGVUaW1lIl0='
                 ).then(function (res) {
-                    gtourGlobal.isOEMed = res
+                    gtourGlobal.isOEMed = res != "0";
                 });
             }
             return qlik.Promise.resolve();

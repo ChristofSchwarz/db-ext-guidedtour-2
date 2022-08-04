@@ -1,10 +1,5 @@
 /*
 paint.js - functionality of main paint method
-
-Version: 0.1
-History:
-0.1, Christof Schwarz, alpha version
-
 */
 
 define(["qlik", "jquery", "./license", "./tooltip", "../editor/scripts/leonardo-msg"], function
@@ -68,7 +63,6 @@ define(["qlik", "jquery", "./license", "./tooltip", "../editor/scripts/leonardo-
             const analysisMode = qlik.navigation.getMode() == 'analysis';
             const parentSelector = `[${gtourGlobal.isSingleMode ? 'data-qid' : 'tid'}="${ownId}"] .qv-object-content .ng-scope`;
 
-            if (layout.pConsoleLog) console.log(ownId, 'paint.paint', layout, tourJson);
             if (analysisMode) $('.gtour-picker').remove();
             const lStorageKey = app.id + '|' + ownId;
 

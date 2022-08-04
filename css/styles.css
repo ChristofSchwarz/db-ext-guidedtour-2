@@ -102,3 +102,7 @@
 .gtour-picker-container {
   margin-left: 50px;
 }
+
+.gtour-tooltip-parent p, .gtour-tooltip-parent li {
+  margin-bottom: 6px;
+}

@@ -5,16 +5,29 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
     (qlik, $, leonardo, license, pickEdit, store, tooltip, senseDemoTour) {
 
     const ext = 'db_ext_guided_tour';
-    const lbl = {  // label definitions
+
+    // label definitions used in Extensions Accordion Menu
+    const lbl = {
+        helpButton: "Help with Guided Tour",
+        actions: 'Actions Menu',
+        newTooltip: 'Create or import a tour',
+        editTooltip: 'Edit, export or delete a tour',
+        // under Actions Menu "Edit"
         selectedTour: 'Selected Tour',
-        startNewTour: 'Start a new tour',
-        new: 'Create or import a tour',
-        edit: 'Edit a tour',
-        // import: 'Import a tour from file',
-        expDel: 'Export or delete a tour'
-    }
+        editTourButton: 'Edit Tour',
+        exportTourButton: 'Export Tour (.json)',
+        deleteTourButton: 'Delete Tour',
+        // under Actions Menu "Create"
+        tourName: 'Tour name',
+        createTourButton: "Create New Tour",
+        importTourButton: 'Import Tour (.json)',
+        createDemoButton: "Create Sense Demo Tour"
+    };
+
 
     return {
+
+        // --------------------------------------------------------------------------------
 
         editorAndSettings: function (gtourGlobal) {
 
@@ -29,24 +42,32 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
                 type: 'items',
                 items: [
                     {
-                        label: "\u26a0\ufe0f Get started with Demo Tour",
+                        label: "\u26a0\ufe0f The tour object has no tour assigned yet. "
+                            + "Create a new tour below or select an existing tour from the 'Edit' menu.",
+                        component: "text",
+                        show: function (arg) { return arg.pTourName == '' && arg.pMode == 'new' }
+                    }, {
+                        label: "\u26a0\ufe0f The tour object has no tour assigned yet. "
+                            + "Create select an existing tour below or create a new tour from the 'Create' menu.",
+                        component: "text",
+                        show: function (arg) { return arg.pTourName == '' && arg.pMode == 'edit' }
+                    }, {
+                        label: lbl.helpButton,
                         component: "button",
-                        action: function (arg) { createDemoTour(arg, app, gtourGlobal); },
-                        //show: function (arg) { return arg.pNewTourMode }
-                        show: function (arg) { return arg.pMode == 'new' } // && arg.pTourName == '' }
+                        action: function (arg) { runHelpTour(arg, app) }
                     }, {
                         type: "string",
                         component: "buttongroup",
                         defaultValue: "new",
-                        label: 'Actions',
+                        label: lbl.actions,
                         ref: "pMode",
                         options: [
-                            { value: "edit", tooltip: lbl.edit, label: 'Edit' },
-                            { value: "new", tooltip: lbl.new, label: 'New/Import' },
+                            { value: "edit", tooltip: lbl.editTooltip, label: 'Edit' },
+                            { value: "new", tooltip: lbl.newTooltip, label: 'Create' },
                             //{ value: "expDel", tooltip: lbl.expDel, label: 'Exp/Del' }
                         ]
                     }, {
-                        label: lbl.selectedTour,
+                        label: lbl.selectedTour, // 'Selected Tour'
                         type: 'string',
                         component: "dropdown",
                         ref: 'pTourName',
@@ -55,9 +76,9 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
                             return fileList.map(function (e) { return { value: e }; });
                         },
                         //show: function (arg) { return !arg.pNewTourMode }
-                        show: function (arg) { return arg.pMode == 'edit' || arg.pMode == 'expDel' }
+                        show: function (arg) { return arg.pMode == 'edit' } // || arg.pMode == 'expDel' }
                     }, {
-                        label: "Edit Tour",
+                        label: lbl.editTourButton, // "Edit Tour",
                         component: "button",
                         action: function (arg) {
                             if (arg.pTourName) {
@@ -69,7 +90,7 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
                         //show: function (arg) { return arg.pTourName != '' && !arg.pNewTourMode }
                         show: function (arg) { return arg.pMode == 'edit' }
                     }, {
-                        label: "Export Tour",
+                        label: lbl.exportTourButton,
                         component: "button",
                         action: function (arg) {
                             if (arg.pTourName) {
@@ -81,7 +102,7 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
                         show: function (arg) { return arg.pMode == 'edit' }
                         //show: function (arg) { return arg.pMode == 'expDel' }
                     }, {
-                        label: "Delete Tour",
+                        label: lbl.deleteTourButton,
                         component: "button",
                         action: function (arg) {
                             if (arg.pTourName) {
@@ -93,23 +114,29 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
                         show: function (arg) { return arg.pMode == 'edit' }
                         // show: function (arg) { return arg.pMode == 'expDel' }
                     }, {
-                        label: 'Tour name',
+                        label: lbl.tourName,
                         type: 'string',
                         ref: 'pNewTourName',
                         //show: function (arg) { return arg.pNewTourMode }
                         show: function (arg) { return arg.pMode == 'new' }
                     }, {
-                        label: "Create New Tour",
+                        label: lbl.createTourButton,
                         component: "button",
                         action: function (arg) { createTour(arg, app); },
                         //show: function (arg) { return arg.pNewTourMode }
                         show: function (arg) { return arg.pMode == 'new' }
                     }, {
-                        label: "Import Tour",
+                        label: lbl.importTourButton,
                         component: "button",
                         action: function (arg) { importTour(arg, app) },
                         //show: function (arg) { return !arg.pNewTourMode }
                         show: function (arg) { return arg.pMode == 'new' }
+                    }, {
+                        label: lbl.createDemoButton,
+                        component: "button",
+                        action: function (arg) { createDemoTour(arg, app, gtourGlobal); },
+                        //show: function (arg) { return arg.pNewTourMode }
+                        show: function (arg) { return arg.pMode == 'new' } // && arg.pTourName == '' }
                     }, subSection('Button Text & Color', [
                         {
                             label: 'Text for Tour Start',
@@ -117,26 +144,12 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
                             ref: 'pTextStart',
                             defaultValue: 'Start Tour',
                             expression: 'optional'
-                        }, /*{
-                        label: "Mouse-Over Mode \u2605",
-                        type: "boolean",
-                        component: "switch",
-                        ref: "pHoverMode",
-                        defaultValue: false,
-                        trueOption: {
-                            value: true,
-                            translation: "On - Hover tooltips"
-                        },
-                        falseOption: {
-                            value: false,
-                            translation: "Off - Sequential Tour"
-                        }
-                    },*/ {
+                        }, {
                             type: "boolean",
                             defaultValue: true,
                             ref: "pShowIcon",
                             label: "Show play icon",
-                            show: function (arg) { return arg.pLaunchMode != 'hover' }
+                            // show: function (arg) { return arg.pLaunchMode != 'hover' }
                         }, {
                             label: 'Font-color of button',
                             type: 'string',
@@ -192,7 +205,7 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
                                 }
                                 opt.push({ value: "4", label: "From data model (read-only)" });
 
-                                // opt.push({ value: "9", label: "External (not available)" })
+                                // opt.push({ value: "9", label: "lbl.editTooltipernal (not available)" })
                                 return opt
                             }
                         }, {
@@ -201,15 +214,10 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
                             component: 'dropdown',
                             ref: 'pEditorUrl',
                             options: [
+                                // { value: "qs-i-dev.databridge.ch" },
+                                { value: "christofschwarz.github.io" },
                                 {
-                                    value: "qs-i-dev.databridge.ch"
-                                },
-                                {
-                                    value: "christofschwarz.github.io"
-                                },
-                                {
-                                    value: "other",
-                                    label: 'Other'
+                                    value: "other", label: 'Other'
                                 }
                             ],
                             defaultValue: "christofschwarz.github.io"
@@ -217,7 +225,7 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
                             label: 'Tour Editor location',
                             type: 'string',
                             ref: 'pEditorCustom',
-                            defaultValue: "https://qs-i-dev.databridge.ch/anonym/extensions/ext_guided_tour_2/editor/editor.html",
+                            defaultValue: "https://qs-i-dev.databridge.ch/anonym/lbl.editTooltipensions/ext_guided_tour_2/editor/editor.html",
                             show: function (arg) { return arg.pEditorUrl == 'other' }
                         }, {
                             label: "Don't forget to set a CSP for 'frame-src' for above hostname in your Qlik Cloud Console Content Security Policy",
@@ -239,6 +247,8 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
                 ]
             }
         },
+
+        // --------------------------------------------------------------------------------
 
         licensing: function (gtourGlobal) {
             const app = qlik.currApp();
@@ -287,19 +297,36 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
             }
         },
 
+        // --------------------------------------------------------------------------------
+
         about: function (qext) {
             return {
                 label: 'About this extension',
                 type: 'items',
                 items: [
                     {
-                        label: function (arg) { return 'Installed extension version ' + qext.version },
+                        label: function (arg) { return 'Extension version ' + qext.version },
                         component: "link",
                         url: '../extensions/ext_guided_tour_2/ext_guided_tour_2.qext'
+                    }, {
+                        label: 'Qlik Version',
+                        component: 'button',
+                        action: function (arg) {
+                            const app = qlik.currApp();
+                            const enigma = app.model.enigmaModel;
+                            const ownId = arg.qInfo.qId;
+                            enigma.global.engineVersion().then((v) => {
+                                leonardo.msg(ownId, 'Engine Version', JSON.stringify(v), null, 'OK');
+                            })
+                        }
                     }, {
                         label: "This extension is available either licensed or free of charge by data/\\bridge. "
                             + "The licensed version has more features and does not show a data/\\bridge ad at the end of the tour.",
                         component: "text"
+                    }, {
+                        label: 'Report an issue/bug here',
+                        component: 'link',
+                        url: 'https://github.com/ChristofSchwarz/db-ext-guidedtour-2/issues'
                     }, {
                         label: "Only licensed customers get support.",
                         component: "text"
@@ -322,6 +349,10 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
             }
         }
     }
+
+    // ====================================================================================
+    //                                 F u n c t i o n s
+    // ====================================================================================
 
     function subSection(labelText, itemsArray, argKey, argVal) {
         var ret = {
@@ -372,7 +403,7 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
                             .then(function () {
 
                                 // close new tour fields by clicking on Edit
-                                $(`.pp-buttongroup-component [title="${lbl.edit}"]`).trigger('qv-activate')
+                                $(`.pp-buttongroup-component [title="${lbl.editTooltip}"]`).trigger('qv-activate')
                                 // $(`[title="${lbl.StartNewTour}"]`).parent().parent().trigger('click');
                                 // select the newly created tour 
                                 waitForElement(`select [label="${arg.pNewTourName}"]`).then(function () {
@@ -383,75 +414,127 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
                     }
                 })
         } else {
-            leonardo.msg('no_name', 'Error', '"Tour name" must not be empty.', null, 'Close');
+            leonardo.msg('no_name', 'Error', `"${lbl.tourName}" must not be empty.`, null, 'Close');
         }
     }
+
+    function runHelpTour(arg, app) {
+        // figure out the tid of the elements in the accordeon menu
+        var tids = {};
+        const helpConfig = {
+            actions: `<p>This is the mode selector for two groups of actions<p><ul>
+                <li>Edit: Actions for existing tours: Edit, Export, Delete</li>
+                <li>Create: Actions to create a tour: New, Import</li>
+                </ul><p>If you switch here, <strong>press again</strong> on Help button to get help for the selected action group.`
+            , selectedTour: 'If you already saved tours in this app, you can find them here and choose the one to start.'
+            , editTourButton: `<p>Here you can edit the tour</p>
+                <p>This will be the button you use the most while creating tour content.</p>`
+            , exportTourButton: 'This exports the tour as a .json file'
+            , deleteTourButton: 'Here you can remove an existing tour'
+            , tourName: 'To create or import a new tour first enter the new name here, then press one of the buttons below.'
+            , createTourButton: 'This button creates an empty new tour in this app'
+            , importTourButton: 'This imports a tour from a .json file into this app'
+            , createDemoButton: `<p>This quickly adds a ready-to-go tour which explains how to use the Qlik Sense Client</p>
+                <p>Try this if you are new to Guided Tour, because you can look in ${lbl.editTourButton} Tour how things are done.</p>`
+        };
+        var tourJson = {
+            mode: 'click',
+            opacity: 1,
+            btnLabelNext: "OK",
+            btnLabelDone: "OK",
+            width: 300,
+            fontsize: "small",
+            arrowHead: 12,
+            bgcolor: "rgb(0, 135, 61)",
+            fontcolor: "white",
+            bordercolor: "white",
+            tooltips: []
+        };
+        const selector = '[pp-accordion="items"] [tid="2"] .item';
+        $(selector).each(function (i) {
+            const html = $(this).html();
+            const tid = $(this).attr('tid');
+            for (const key in helpConfig) {
+                if (html.indexOf(lbl[key]) > -1) {
+                    //tids[key] = selector + `[tid="${$(this).attr('tid')}"]`;
+                    tourJson.tooltips.push({
+                        selector: selector + `[tid="${tid}"]`,
+                        html: helpConfig[key]
+                    });
+                }
+            }
+        });
+
+        quickPlay(tourJson, arg, app);
+    }
+
+
+    function quickPlay(tourJson, arg, app) {
+        const ownId = arg.qInfo.qId;
+        const currSheet = qlik.navigation.getCurrentSheetId().sheetId;
+        const enigma = app.model.enigmaModel;
+        var mimikGlobal = {
+            cache: JSON.parse(`{"${ownId}":${JSON.stringify(tourJson)}}`),
+            formulas: JSON.parse(`{"${ownId}":${JSON.stringify(tourJson)}}`),
+            isSingleMode: false,
+            licensedObjs: JSON.parse(`{"${ownId}":true}`),
+            activeTooltip: JSON.parse(`{"${currSheet}":{"${ownId}":-2}}`)
+        };
+        tooltip.play(JSON.parse(JSON.stringify(mimikGlobal)), ownId, arg, 0, null, enigma, currSheet
+            , undefined, undefined, true);  // true = preview, dont perform actions 
+    }
+
 
     function createDemoTour(arg, app, gtourGlobal) {
         // const demoTourName = (`${Math.random()}`).substr(2);
         const demoTourName = 'Qlik Sense Tour';
         const ownId = arg.qInfo.qId;
-        const currSheet = qlik.navigation.getCurrentSheetId().sheetId;
-        const enigma = app.model.enigmaModel;
 
-        function showStartNow(msg) {
-            const tourJson1 = {
-                "mode": "click",
-                "fontsize": "medium",
-                "arrowHead": 12,
-                "opacity": 1,
-                "width": 300,
-                "bgcolor": "rgb(0, 135, 61)",
-                "fontcolor": "white",
-                "bordercolor": "white",
-                "btnLabelNext": "Next",
-                "btnLabelDone": "OK",
-                "tooltips": [
-                    {
-                        "selector": ownId,
-                        "html": 'You can start the Demo Tour now.',
-                        "noClose": true
-                    }, {
-                        selector: '[pp-accordion="items"] [tid="2"] [tid="3"]',
-                        html: 'Here you can edit the tour.',
-                        noClose: true
-                    }
-                ]
-            }
-            var mimikGlobal = {
-                cache: JSON.parse(`{"${ownId}":${JSON.stringify(tourJson1)}}`),
-                formulas: JSON.parse(`{"${ownId}":${JSON.stringify(tourJson1)}}`),
-                isSingleMode: false,
-                licensedObjs: JSON.parse(`{"${ownId}":true}`),
-                activeTooltip: JSON.parse(`{"${currSheet}":{"${ownId}":-2}}`)
-            };
-            tooltip.play(JSON.parse(JSON.stringify(mimikGlobal)), ownId, arg, 0, null, enigma, currSheet
-                , undefined, undefined, true);  // true = preview, dont perform actions 
+        const tourJson = {
+            mode: "click",
+            fontsize: "small",
+            arrowHead: 12,
+            opacity: 1,
+            width: 300,
+            bgcolor: "rgb(0, 135, 61)",
+            fontcolor: "white",
+            bordercolor: "white",
+            btnLabelNext: "Next",
+            btnLabelDone: "OK",
+            tooltips: [
+                {
+                    selector: '[data-testid="analytics-creation-edit-button"]',
+                    html: "To start the tour click here to close Edit Mode",
+                    noClose: true
+                }, {
+                    selector: ownId,
+                    html: `You can start the ${demoTourName} now.`,
+                    noClose: true
+                }
+            ]
         }
 
         store.existsTour(demoTourName, arg.pStorageProvider, app.id, arg.pConsoleLog)
             .then(function (existsTour) {
                 if (existsTour) {
                     // trigger click on Edit
-                    $(`.pp-buttongroup-component [title="${lbl.edit}"]`).trigger('qv-activate')
+                    $(`.pp-buttongroup-component [title="${lbl.editTooltip}"]`).trigger('qv-activate')
                     // select the existing Qlik Sense Demo tour 
                     waitForElement(`select [label="${demoTourName}"]`).then(function () {
                         $(`[title="${lbl.selectedTour}"]`).parent().find(`select [label="${demoTourName}"]`).prop('selected', true);
                         $(`[title="${lbl.selectedTour}"]`).parent().find('select').trigger('change');
-                        showStartNow();
-                        //leonardo.msg('info', 'Info', 'You can start the Demo Tour now.', null, 'Close');
+                        quickPlay(tourJson, arg, app);
                     });
                 } else {
                     store.saveTour(gtourGlobal, demoTourName, arg.pStorageProvider, JSON.parse(senseDemoTour), app.id, arg.pConsoleLog)
                         .then(function () {
                             // trigger click on Edit
-                            $(`.pp-buttongroup-component [title="${lbl.edit}"]`).trigger('qv-activate')
+                            $(`.pp-buttongroup-component [title="${lbl.editTooltip}"]`).trigger('qv-activate')
                             // select the newly created tour 
                             waitForElement(`select [label="${demoTourName}"]`).then(function () {
                                 $(`[title="${lbl.selectedTour}"]`).parent().find(`select [label="${demoTourName}"]`).prop('selected', true);
                                 $(`[title="${lbl.selectedTour}"]`).parent().find('select').trigger('change');
-                                showStartNow();
-                                //leonardo.msg('info', 'Info', 'You can start the Demo Tour now.', null, 'Close');
+                                quickPlay(tourJson, arg, app);
                             });
                         })
                 }
@@ -501,7 +584,7 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
                                     .then(function (res) {
                                         $('#msgparent_tourimport').remove();
                                         // activate Edit Mode
-                                        $(`.pp-buttongroup-component [title="${lbl.edit}"]`).trigger('qv-activate');
+                                        $(`.pp-buttongroup-component [title="${lbl.editTooltip}"]`).trigger('qv-activate');
                                         // select the newly created tour 
                                         waitForElement(`[title="${lbl.selectedTour}"]`).then(function () {
                                             $(`[title="${lbl.selectedTour}"]`).parent().find(`select [label="${tourName}"]`).prop('selected', true);
@@ -515,7 +598,7 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
                     }
                 })
         } else {
-            leonardo.msg('no_name', 'Error', 'Tour name must not be empty.', null, 'Close');
+            leonardo.msg('no_name', 'Error', `"${lbl.tourName}" must not be empty.`, null, 'Close');
         }
     }
 
@@ -541,11 +624,11 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
             store.deleteTour(gtourGlobal, arg.pTourName, arg.pStorageProvider, app.id, arg.pConsoleLog);
             arg.pTourName = '';
             $('.gtour-editor').remove(); // remove the cached editor
-            // refresh the tour list by changing the action-group to "Edit" then back to "Exp/Del"
-            $(`.pp-buttongroup-component [title="${lbl.edit}"]`).trigger('qv-activate');
+            // refresh the tour list by changing the action-group to "New" then back to "Edit"
+            $(`.pp-buttongroup-component [title="${lbl.newTooltip}"]`).trigger('qv-activate');
             setTimeout(function () {
-                $(`.pp-buttongroup-component [title="${lbl.expDel}"]`).trigger('qv-activate');
-            }, 300);
+                $(`.pp-buttongroup-component [title="${lbl.editTooltip}"]`).trigger('qv-activate');
+            }, 500);
         })
     }
 

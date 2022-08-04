@@ -281,8 +281,10 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
 
                                 }
 
-                                // add the tooltip div
+                                // try to avoid several tooltips in DOM
+                                $('.gtour-tooltip-parent').remove();
 
+                                // add the tooltip div
                                 $(rootContainer).append(`
                                 <div class="lui-tooltip  gtour-tooltip-parent"
                                     id="${tooltipDOMid}" 
@@ -302,7 +304,10 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
                                     id="${tooltipDOMid}_next">${isLast ? tourJson.btnLabelDone : tourJson.btnLabelNext}</a>
                                     <div class="lui-tooltip__arrow"></div>
                                 </div>`);
-                                console.log(`Now there are ${$('.gtour-tooltip-parent').length} tooltips in DOM.`);
+
+                                if ($('.gtour-tooltip-parent').length > 1) {
+                                    console.error(`Now there are ${$('.gtour-tooltip-parent').length} tooltips in DOM.`);
+                                }
                                 // replace <pre> tags with <span> and put included text as html
                                 // Background: Quill text editor has the option to add a code block and this is put inside <pre> </pre> tags.
                                 // Here we unwrap the code and interpret it as HTML
@@ -514,12 +519,12 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
             currElem.fadeOutSelector2 = null;
         }
 
-        //if (layout.pConsoleLog) {
-        console.log('function setAllSelectors');
-        console.log(`selectorFormat ${selectorFormat}, pointToSelector ${currElem.pointToSelector}`);
-        console.log(`highlightSelector ${currElem.highlightSelector}, fadeOutSelector ${currElem.fadeOutSelector}`);
-        console.log(`highlightSelector2 ${currElem.highlightSelector2}, fadeOutSelector2 ${currElem.fadeOutSelector2}`);
-        //}
+        if (layout.pConsoleLog) {
+            console.log('function setAllSelectors');
+            console.log(`selectorFormat ${selectorFormat}, pointToSelector ${currElem.pointToSelector}`);
+            console.log(`highlightSelector ${currElem.highlightSelector}, fadeOutSelector ${currElem.fadeOutSelector}`);
+            console.log(`highlightSelector2 ${currElem.highlightSelector2}, fadeOutSelector2 ${currElem.fadeOutSelector2}`);
+        }
     }
 
     // ---------------------------------------------------------------------------------------------------
