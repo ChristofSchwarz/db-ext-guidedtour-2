@@ -2,7 +2,7 @@
 
 define(["qlik", "jquery", "./tooltip", "./store", "./paint",
     "../editor/scripts/leonardo-msg", "text!../editor-div.html"], function
-    (qlik, $, tooltip, store, paint, leonardo, htmlEditor) {
+    (qlik, $, tooltipJs, store, paint, leonardo, htmlEditor) {
 
     // const storageProvider = 1; // 1.. Qlik Sense for Windows, app-attached content
 
@@ -88,7 +88,9 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
                         $('#' + ownId + '_tooltip_quit').click(); // if a tooltip is open, close it
 
                         await store.saveTour(gtourGlobal, arg.pTourName, arg.pStorageProvider, event.data.tourJson, app.id);
-                        gtourGlobal.cache[ownId] = event.data.tourJson;
+                        //gtourGlobal.cache[ownId] = event.data.tourJson;  
+                        gtourGlobal.formulas[ownId] = event.data.tourJson;
+                        gtourGlobal.cache[ownId] = await tooltipJs.resolveQlikFormulas2(gtourGlobal.formulas[ownId]);
                         closeEditor(origWidth, false);
                         $('.gtour-editor button').prop('disabled', false);
 
@@ -105,7 +107,7 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
 
 
                         const tourJson = event.data.tourJson;
-                        const currFormulas = tooltip.getKeysWithFormulas(tourJson)
+                        const currFormulas = tooltipJs.getKeysWithFormulas(tourJson)
                         const selector = event.data.selector;
                         const activeTab = event.data.activeTab;
 
@@ -132,7 +134,7 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
                             }
                             mimikGlobal.cache[ownId].tooltips = [mimikGlobal.cache[ownId].tooltips[keepTooltipNo]];
                             mimikGlobal.formulas[ownId].tooltips = [mimikGlobal.formulas[ownId].tooltips[keepTooltipNo]];
-                            mimikGlobal.cache[ownId] = await tooltip.resolveQlikFormulas2(mimikGlobal.formulas[ownId]);
+                            mimikGlobal.cache[ownId] = await tooltipJs.resolveQlikFormulas2(mimikGlobal.formulas[ownId]);
                         }
 
                         if ((activeTab != 1 && selector) || activeTab == 1) {
@@ -141,7 +143,7 @@ define(["qlik", "jquery", "./tooltip", "./store", "./paint",
                             $('.gtour-tooltip-parent').remove(); // if other tooltips are in DOM, remove them
 
                             // if selector is filled show this one tooltip, or if on tab 1 show entire tour
-                            tooltip.play(JSON.parse(JSON.stringify(mimikGlobal)), ownId, arg, 0, null, enigma, currSheet
+                            tooltipJs.play(JSON.parse(JSON.stringify(mimikGlobal)), ownId, arg, 0, null, enigma, currSheet
                                 , undefined, undefined, true);  // true = preview, dont perform actions 
                         }
                         // repaint the button, too

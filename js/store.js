@@ -7,8 +7,8 @@ History:
 
 */
 
-define(["qlik", "jquery", "../editor/scripts/leonardo-msg"], function
-    (qlik, $, leonardo) {
+define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./jszip.min", "./FileSaver.min"], function
+    (qlik, $, leonardo, JSZip, FileSaver) {
 
     const tourDefault = {
         "mode": "click",
@@ -221,11 +221,14 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg"], function
         },
 
         //--------------------------------------------------------------------------------
-        listTours: async function (gtourGlobal, providerId, appId, log = false) {
+        listTours: async function (gtourGlobal, providerId, appId, log = false, zipAll = false) {
             //----------------------------------------------------------------------------
             const app = qlik.currApp();
             const enigma = app.model.enigmaModel;
-            if (log) console.log('calling listTours');
+            var zip;
+            if (zipAll) zip = new JSZip();
+
+            if (log) console.log('calling listTours' + (zipAll ? ' and put all in a zip for download' : ''));
 
             const mode = location.href.indexOf('qlikcloud.com') > -1 ? 'cloud' : 'windows';
             // gtourGlobal.isQlikCloud
@@ -233,6 +236,14 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg"], function
                 "1": `/qrs/app/content/full?filter=app.id eq ${appId}`,
                 "2": `/api/v1/apps/${appId}/media/list`,
                 "3": `/qrs/app/content/full?filter=app.id eq ${appId}`
+            }
+            const tourDownloadLink = function (pid, tourName) {
+                const links = {
+                    "1": `/appcontent/${appId}/${tourName}.txt`,
+                    "2": `/api/v1/apps/${appId}/media/files/${tourName}_gtour.gif`,
+                    "3": `/appcontent/${appId}/${tourName}_gtour.gif`
+                }
+                return links[pid]
             }
 
             if (providerId == 1) {  // Load from app-attached file (Qlik Sense Windows)
@@ -256,12 +267,25 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg"], function
                 var res = await restCall('GET', apiUrls["2"], undefined, log);
                 var fileList = [];
                 if (res) {
-                    res.data.forEach(function (fileInfo) {
+                    // res.data.forEach(function (fileInfo) {
+                    for (const fileInfo of res.data) {
                         if (fileInfo.id.substr(-10) == '_gtour.gif') {
-                            fileList.push(fileInfo.id.split('_gtour.gif')[0]);
+                            const tourName = fileInfo.id.split('_gtour.gif')[0];
+                            fileList.push(tourName);
+                            if (zipAll) {
+                                const imageUrl = tourDownloadLink("3", tourName);
+                                var imageBlob = await fetch(imageUrl);
+                                imageBlob = await imageBlob.blob();
+                                // const imageFile = new File([imageBlob], tourName + '_gtour.gif');
+                                zip.file(tourName + '_gtour.gif', new File([imageBlob], tourName + '_gtour.gif'));
+                            }
                         }
-                    });
+                    };
                     fileList.sort();
+                }
+                if (zipAll) {
+                    content = await zip.generateAsync({ type: "blob" });
+                    saveAs(content, "all_tours.zip");
                 }
                 return fileList;
 
@@ -270,15 +294,28 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg"], function
                 var res = await restCall('GET', apiUrls["3"], undefined, log);
                 var fileList = [];
                 var res = res[0] ? res[0].references : [];
-                res.forEach(function (fileInfo) {
+                // res.forEach(function (fileInfo) {
+                for (const fileInfo of res) {
                     if (fileInfo.externalPath.substr(-10) == '_gtour.gif') {
                         const fileNameOnly = fileInfo.externalPath.split('/')[fileInfo.externalPath.split('/').length - 1];
-                        if (fileNameOnly.length > 4) {
-                            fileList.push(decodeURI(fileNameOnly.split('_gtour.gif')[0]))  // without trailling '_gtour.gif'
+                        // if (fileNameOnly.length > 4) {
+                        const tourName = decodeURI(fileNameOnly.split('_gtour.gif')[0])
+                        fileList.push(tourName);  // without trailling '_gtour.gif'
+                        if (zipAll) {
+                            const imageUrl = tourDownloadLink("3", tourName);
+                            var imageBlob = await fetch(imageUrl);
+                            imageBlob = await imageBlob.blob();
+                            // const imageFile = new File([imageBlob], tourName + '_gtour.gif');
+                            zip.file(tourName + '_gtour.gif', new File([imageBlob], tourName + '_gtour.gif'));
                         }
+                        // }
                     }
-                });
+                };
                 fileList.sort();
+                if (zipAll) {
+                    content = await zip.generateAsync({ type: "blob" });
+                    saveAs(content, "all_tours.zip");
+                }
                 return fileList;
 
             } else if (providerId == 4) {
@@ -331,6 +368,10 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg"], function
                 leonardo.msg('deleteTour', 'Error', 'Function deleteTour: Error ' + JSON.stringify(err), null, 'OK');
                 return false;
             }
+        },
+
+        //--------------------------------------------------------------------------------
+        downloadAllTours: async function (gtourGlobal, providerId, appId, log = false) {
         }
     }
 

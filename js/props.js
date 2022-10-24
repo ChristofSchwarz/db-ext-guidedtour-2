@@ -16,6 +16,7 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
         selectedTour: 'Selected Tour',
         editTourButton: 'Edit Tour',
         exportTourButton: 'Export Tour (.json)',
+        exportAllButton: 'Export all tours (.zip)',
         deleteTourButton: 'Delete Tour',
         // under Actions Menu "Create"
         tourName: 'Tour name',
@@ -113,6 +114,16 @@ define(["qlik", "jquery", "../editor/scripts/leonardo-msg", "./license",
                         },
                         show: function (arg) { return arg.pMode == 'edit' }
                         // show: function (arg) { return arg.pMode == 'expDel' }
+                    }, {
+                        label: lbl.exportAllButton,
+                        component: "button",
+                        action: function (arg) {
+                            store.listTours(gtourGlobal, arg.pStorageProvider, app.id, arg.pConsoleLog, true);
+                        },
+                        show: function (arg) {
+                            return arg.pMode == 'edit' && (arg.pStorageProvider == 2 || arg.pStorageProvider == 3)
+                        }
+                        //show: function (arg) { return arg.pMode == 'expDel' }
                     }, {
                         label: lbl.tourName,
                         type: 'string',

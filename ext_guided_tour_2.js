@@ -1,6 +1,6 @@
 define(["qlik", "jquery", "text!./css/styles.css", "./js/props", "./js/paint",
-    "./js/tooltip", "./js/license", "./js/store"], function
-    (qlik, $, cssContent, props, paint, tooltipJs, license, store) {
+    "./js/tooltip", "./js/license", "./js/store", "./js/jszip.min", "./js/FileSaver.min"], function
+    (qlik, $, cssContent, props, paint, tooltipJs, license, store, JSZip, FileSaver) {
 
     'use strict';
 
@@ -43,7 +43,10 @@ define(["qlik", "jquery", "text!./css/styles.css", "./js/props", "./js/paint",
                 qMeasures: [{
                     qDef: { qDef: '=GetCurrentSelections()' }
                 }]
-            }
+            },
+            pLicenseJSON: {
+                qStringExpression: { qExpr: "=vGuidedTourLicense" }
+            },
         },
 
         definition: {
@@ -109,21 +112,13 @@ define(["qlik", "jquery", "text!./css/styles.css", "./js/props", "./js/paint",
             }
             gtourGlobal.isSingleMode = document.location.href.split('?')[0].split('/').indexOf('single') > -1;
             if (layout.pConsoleLog) console.log(ownId, 'paint', layout, gtourGlobal);
-            /*
-                        if ($(`#${ownId}_tooltip[tooltip-no="2"]`).length) {
-                            // Check for auto-click on Next button due to condition
-                            enigma.evaluate('GetSelectedCount(CaseID)').then(function (res) {
-                                console.log('gtourglobal', res, gtourGlobal);
-                                if (res != 0) {
-                                    $(`#${ownId}_next`).trigger('click');
-                                }
-                            })
-                        };*/
-            if (!layout.pTourName) {
-                $element.html('<div class="gtour-center-middle">'
-                    //+ '<span class="lui-icon  lui-icon--info"></span>&nbsp;'
-                    + ' \u26a0\ufe0f No tour assigned to this element.<br>Set it in the properties panel.</div>');
 
+            if (!layout.pTourName) {
+                $element.html(`
+                    <div class="gtour-center-middle">
+                        \u26a0\ufe0f No tour assigned to this element.<br />
+                        Set it in the properties panel.
+                    </div>`);
             } else {
 
                 const tourJson = await store.loadTour(gtourGlobal, layout.pTourName, layout.pStorageProvider,

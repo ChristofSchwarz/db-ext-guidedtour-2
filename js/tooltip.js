@@ -282,11 +282,11 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
                                 }
 
                                 // try to avoid several tooltips in DOM
-                                $('.gtour-tooltip-parent').remove();
+                                $('.gtour-single-tooltips').remove();
 
                                 // add the tooltip div
                                 $(rootContainer).append(`
-                                <div class="lui-tooltip  gtour-tooltip-parent"
+                                <div class="lui-tooltip  gtour-tooltip-parent  gtour-${multiTooltips ? 'multi' : 'single'}-tooltips"
                                     id="${tooltipDOMid}" 
                                     tooltip-no="${tooltipNo + 1}" 
                                     reference="${btoa(currElem.pointToSelector)}"
@@ -305,8 +305,8 @@ define(["qlik", "jquery" /*, "./license"*/], function (qlik, $ /*, license*/) {
                                     <div class="lui-tooltip__arrow"></div>
                                 </div>`);
 
-                                if ($('.gtour-tooltip-parent').length > 1) {
-                                    console.error(`Now there are ${$('.gtour-tooltip-parent').length} tooltips in DOM.`);
+                                if ($('.gtour-single-tooltips').length > 1) {
+                                    console.error(`Now there are ${$('.gtour-single-tooltips').length} (single) tooltips in DOM.`);
                                 }
                                 // replace <pre> tags with <span> and put included text as html
                                 // Background: Quill text editor has the option to add a code block and this is put inside <pre> </pre> tags.

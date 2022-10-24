@@ -85,7 +85,7 @@ define(["qlik", "jquery", "./license", "./tooltip", "../editor/scripts/leonardo-
                         if (res == -1 || res == 1) {
                             console.log('tooltip #' + (activeTooltip + 1) + ' auto-next-condition ('
                                 + gtourGlobal.cache[ownId].tooltips[activeTooltip].autonextcondi + ') was true.');
-                            $(`#${ownId}_next`).trigger('click');
+                            $(`#${ownId}_tooltip_next`).trigger('click');
                         } else if (res == 0) {
                         } else {
                             console.warn('auto-next condition ' + gtourGlobal.cache[ownId].tooltips[activeTooltip].autonextcondi
